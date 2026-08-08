@@ -34,19 +34,6 @@ Use concise result assertions:
 
 Do not promote incidental Ping details such as packet sequence, latency, or duplicated reverse tests into learned case knowledge. Retain raw screenshots separately as evidence if provided.
 
-## Project stage gates
-
-Define every required assertion before generating its stage configuration. Use minimum sufficient acceptance commands in the normal path and add diagnostic commands only after failure.
-
-Accept two evidence paths:
-
-- explicit user self-verification -> `passed` with `user_attestation`
-- pasted terminal output or screenshot-derived facts -> `runtime_evidence`
-
-Return `passed` only when all required assertions pass, `failed` when any required assertion fails, and `uncertain` when evidence is missing or ambiguous. Never advance automatically on `uncertain`.
-
-When the user chooses to continue after failure, record `forced_pass`, retain the failed assertions as project risks, and require them in final acceptance. Do not convert forced continuation into normal success.
-
 ## Case approval
 
 Use:
