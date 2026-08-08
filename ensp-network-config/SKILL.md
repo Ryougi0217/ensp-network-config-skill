@@ -65,6 +65,8 @@ Follow Completion and case learning in [project-workflow.md](references/project-
 
 After configuration and acceptance are complete, ask once whether to save the project as a case. Do not import, update the capability matrix, or delay script delivery without explicit authorization.
 
+For an authorized import, normalize the case to `case.json`, `topology.json`, `steps.yaml`, and `assertions.yaml`, plus every configuration artifact listed by the case. Run `python scripts/validate_case.py CASE_DIR`; it invokes `scripts/parse_vrp_config.py` for supplied VRP configurations. Require a report with `"valid": true` before marking the case `statically_validated`. If PyYAML is unavailable, report the dependency instead of skipping validation.
+
 For authorized imports, use this quality progression:
 
 `imported -> normalized -> statically_validated -> runtime_validated -> approved`
