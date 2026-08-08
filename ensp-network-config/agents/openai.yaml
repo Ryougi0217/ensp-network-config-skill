@@ -1,0 +1,4 @@
+interface:
+  display_name: "eNSP Network Config"
+  short_description: "识别eNSP拓扑并分阶段生成与验证华为VRP配置脚本"
+  default_prompt: "Use $ensp-network-config to plan this eNSP network, generate stage TXT scripts, and guide each verification gate."
