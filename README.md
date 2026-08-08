@@ -14,6 +14,8 @@
 - 记录失败、强制放行、返工和项目风险
 - 按需将阶段脚本拼接为全网最终配置
 - 在配置完成后由用户决定是否保存为案例
+- 从已验证案例中使用可迁移的设计规则，不复制案例参数与脚本
+- 对授权导入的案例执行确定性结构与配置校验
 
 ## 仓库结构
 
@@ -22,6 +24,8 @@ ensp-network-config/
 ├── SKILL.md
 ├── agents/
 ├── references/
+│   ├── design-rules.md
+│   └── design-rules/
 └── scripts/
 ```
 
@@ -33,7 +37,19 @@ ensp-network-config/
 %USERPROFILE%\.codex\skills\ensp-network-config
 ```
 
+安装脚本依赖：
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
 重新启动或刷新Codex后，通过`$ensp-network-config`调用。
+
+## 设计规则
+
+`references/design-rules.md`是设计规则索引。Skill根据当前任务按需读取对应分类，不会一次加载全部规则。已有规则只作为可迁移的设计约束；设备、端口、VLAN、地址、VRID、优先级和成本必须根据当前拓扑重新计算。
+
+当前已验证规则覆盖园区二层、网关边界与可靠性/OAM。OSPF、BGP、IS-IS、组播、MPLS、EVPN/VXLAN、Segment Routing和QoS等分类已经预留，等待后续案例验证后填充。
 
 ## 项目工作流
 
@@ -114,6 +130,14 @@ python ensp-network-config/scripts/evaluate_gate.py evidence validation/evidence
 python ensp-network-config/scripts/assemble_stage_scripts.py `
   --project projects/hotel
 ```
+
+校验经过用户授权导入的案例：
+
+```powershell
+python ensp-network-config/scripts/validate_case.py cases/case-01
+```
+
+案例必须依次经过`imported -> normalized -> statically_validated -> runtime_validated -> approved`。只有`approved`案例可作为可信证据。
 
 ## 安全边界
 
