@@ -66,3 +66,16 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Common failure: A prefix list is created but never referenced, rule order is assumed, or a filtered route is claimed without route-table and reachability evidence.
 - Implementation order: Confirm source prefixes; define and inspect match order; apply to the intended protocol direction; verify attachment; then inspect and test the resulting route set.
 - Verification method: Compare object definition, protocol attachment, route-table state, and the required positive/negative route assertions.
+
+## DR-PBR-001: Order specific policy-route exceptions before generic redirects
+- Status: candidate
+- Tags: pbr, multi-exit, classifier, behavior, traffic-policy, redirect, precedence
+- Evidence level: candidate; source-derived from S V600 and AR examples, without an independent runtime run in this project.
+- Trigger: Policy-based routing sends selected traffic to an exit or next hop while an exception must preserve an internal, published-service, or source-specific path.
+- Design goal: Make policy classification, behavior, attachment direction, and precedence explainable for both the exception and the generic redirect.
+- Decision logic: Define the narrow exception first; define the generic redirect separately; bind classifier and behavior in an ordered policy on the interface and direction where the original packet is visible; inspect the applied policy and records; then trace the exact exception and generic flows.
+- Recompute parameters: Source/destination/service match, classifier operator/order, next hop or redirect action, ingress interface, policy attachment, exit routes, return path, and positive/negative traces.
+- Applicability boundary: Candidate until platform precedence and applied-record output are confirmed; a policy object or one successful trace does not prove that a more-specific exception wins.
+- Common failure: A generic redirect matches before the server-response exception, the policy is attached after NAT has hidden the source identity, or HTTP-specific and source-specific rules overlap without a declared order.
+- Implementation order: Establish underlay and route reachability; define exception; define generic rule; attach policy at the pre-NAT visible direction; inspect classifier/behavior/policy state; then trace both flows before and after the named fault.
+- Verification method: Use `display traffic classifier`, `display traffic behavior`, `display traffic policy`, applied-record/counter output, and path tracing for each exact flow.

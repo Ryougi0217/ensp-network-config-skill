@@ -79,3 +79,16 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Common failure: A manual priority change is labeled failover, or a new Master state is treated as proof of upstream reachability and recovery.
 - Implementation order: Establish normal gateway/path; record baseline; perform the requested fault; verify state and reachability; restore and measure recovery.
 - Verification method: Use VRRP state, client path output, fault logs, and timed recovery evidence as separate records.
+
+## DR-NAT-003: Separate server publication, hairpin access, ALG, and outbound translation claims
+- Status: candidate
+- Tags: nat, nat-server, hairpin, dns-map, alg, pbr, dual-exit
+- Evidence level: candidate; source-derived from sequential examples and not independently runtime-validated in this project.
+- Trigger: A multi-exit edge must publish an internal service while also supporting inside access, DNS mapping, ALG, or general outbound NAT.
+- Design goal: Keep service publication, inside-to-published-name access, protocol assistance, and outbound source translation as separate contracts.
+- Decision logic: Derive the inside server, public service tuple, exit path, return route, and required client locations; configure only the required server mapping and outbound scope; add DNS mapping/ALG only for the named protocol; place a more-specific inside exception before a generic redirect or exit policy; then test each traffic direction separately.
+- Recompute parameters: Server/private and public addresses, service ports, exit interfaces, NAT selectors, DNS-map name/address, ALG requirement, PBR order, return routes, and positive/negative service assertions.
+- Applicability boundary: Candidate until target-platform processing order, hairpin behavior, ALG support, and runtime translation/session evidence are independently confirmed; a source NAT table or successful Ping does not prove service publication.
+- Common failure: A generic redirect captures an inside server response, DNS mapping is treated as authorization, an ALG is enabled without a protocol need, or an outbound rule changes the published-service path.
+- Implementation order: Establish underlay and return path; define authorization; define server mapping; add the inside exception and any required DNS/ALG function; bind outbound NAT; inspect translations/sessions; test inside, outside, and negative-service cases.
+- Verification method: Correlate policy match, translation direction, DNS/ALG state, applied-policy records, session state, and the exact service results.

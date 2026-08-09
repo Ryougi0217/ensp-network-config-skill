@@ -40,3 +40,16 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Common failure: Two phases are merged into one topology state, an excluded static address is treated as a DHCP lease, or the global pool remains bound during the interface-pool test.
 - Implementation order: Establish VLAN/SVI; run and verify one mode; document transition/cleanup; run and verify the next mode; retain separate evidence.
 - Verification method: Correlate active binding, server pool state, client lease/options, and phase timestamps.
+
+## DR-DHCP-003: Treat DHCP relay as a three-sided reachability and return-path contract
+- Status: candidate
+- Tags: dhcp, relay, server-group, return-route, reachability
+- Evidence level: candidate; extracted from source examples, but not independently runtime-validated in this project.
+- Trigger: DHCP clients and the DHCP server are on different subnets and a router or gateway relays the request.
+- Design goal: Keep client-to-relay attachment, relay-to-server reachability, and server-to-client return routing explicit before interpreting a lease.
+- Decision logic: Derive the client subnet and relay interface from the topology; define the server group and relay selection on the client-facing interface; confirm routes in both directions; then renew a client and correlate relay/server state with the lease.
+- Recompute parameters: Client prefix, relay interface, server address/group, server return route, gateway, relay scope, trust boundaries, and lease assertions.
+- Applicability boundary: Candidate until the target platform's relay syntax and a clean relay/server/client runtime path are confirmed; a displayed relay configuration or source `ipconfig` output is not proof of relay operation.
+- Common failure: The server route back to the client subnet is missing, relay selection is attached to the wrong interface, or a direct/local DHCP mode is confused with relay mode.
+- Implementation order: Establish client and server routing; define the server group; enable relay on the client-facing interface; inspect relay/server state; renew the client; then validate options and return reachability.
+- Verification method: Correlate relay configuration, server receipt/response, client lease/options, and bidirectional routing evidence.

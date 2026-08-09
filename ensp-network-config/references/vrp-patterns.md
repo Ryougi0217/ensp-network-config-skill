@@ -209,3 +209,63 @@ The exact AC syntax is model/version dependent. Keep management VLAN,
 service VLAN, security, SSID, VAP, AP-group, and radio references explicit.
 `display ap all` proves AP control-plane state only; verify STA association,
 DHCP/gateway, and egress as separate assertions.
+
+## DHCP relay dependency chain
+    dhcp enable
+    dhcp server group <group-id>
+     server <dhcp-server-address>
+    interface Vlanif<client-vlan>
+     dhcp select relay
+     dhcp relay server-select <group-id>
+    display dhcp relay
+Confirm client-to-relay and server return routes; keep relay and local-pool phases separate.
+## NAT service publication and hairpin review
+    nat server <target-platform-mapping> global <public-service> inside <server-service>
+    nat alg dns enable
+    nat dns-map <public-name> <inside-address>
+    nat outbound <source-selector>  # resolved egress only
+Treat mapping, DNS/ALG, inside exception, authorization, and outbound translation as separate objects; test inside, outside, and negative-service flows.
+
+## MQC classifier and policy attachment
+    traffic classifier <classifier> operator or
+     if-match acl <acl-id>
+    traffic behavior <behavior>
+     <police-or-remark-action>
+    traffic policy <policy>
+     classifier <classifier> behavior <behavior>
+    interface <visible-direction-interface>
+     traffic-policy <policy> inbound|outbound
+    display traffic-policy statistics interface <interface>
+Attach where the original identity is visible; check direction, interface budget, counters, and an unaffected flow.
+
+## BGP peer and address-family separation
+    bgp <local-as>
+     router-id <router-id>
+     peer <peer-address> as-number <peer-as>
+     ipv4-family unicast
+      peer <peer-address> enable
+      peer <peer-address> route-policy <policy> import|export
+    display bgp peer
+    display ip routing-table protocol bgp
+Keep underlay, session, AF, policy, next hop, and selected route as separate evidence layers.
+
+## IS-IS adjacency and route learning
+    isis <process-id>
+     network-entity <net>
+     is-level level-1-2
+    interface <transit-interface>
+     isis enable <process-id>
+    display isis peer
+    display ip routing-table protocol isis
+Recompute NET/area/level and interface set; do not infer learned routes from configuration alone.
+
+## PIM/IGMP receiver path
+    multicast routing-enable
+    interface <receiver-interface>
+     igmp enable
+    interface <transit-interface>
+     pim sm|dm
+    pim static-rp <rp-address>
+    display pim interface
+    display pim routing-table
+Verify unicast RPF, RP consistency, receiver membership, and forwarding separately; control-plane state is not delivery proof.

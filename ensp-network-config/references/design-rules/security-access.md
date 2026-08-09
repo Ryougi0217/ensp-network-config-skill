@@ -105,3 +105,16 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Common failure: Only the positive path is tested, a reverse established flow is confused with a new session, or a NAT failure is misreported as policy denial.
 - Implementation order: Establish underlay; inspect zones; test positive; initiate controlled negative; inspect policy/session/logs; report the failure layer.
 - Verification method: Require separate positive/negative outcomes and policy/session evidence tied to the exact flow.
+
+## DR-MGMT-001: Keep management transport, AAA, and source restriction as separate gates
+- Status: candidate
+- Tags: management-access, ssh, stelnet, telnet, radius, hwtacacs, vty, acl
+- Evidence level: candidate; source-derived from AR management examples and not independently runtime-validated in this project.
+- Trigger: A device management requirement combines SSH/STelnet or legacy Telnet with local, RADIUS, or HWTACACS authentication and a source restriction.
+- Design goal: Prevent a successful login in one layer from being mistaken for proof of the transport, identity, authorization, and source-boundary layers.
+- Decision logic: Prefer STelnet/SSH for new management; retain Telnet only for an explicit compatibility requirement; define the management source/interface, AAA method and fallback, VTY transport, user privilege/service, and source ACL independently; then test a permitted login and a controlled rejected source/transport.
+- Recompute parameters: Management subnet/interface, SSH key/version, VTY lines, AAA server/group/keys, local fallback, authorization level, permitted source scope, transport list, and negative assertions.
+- Applicability boundary: Candidate until target VRP version, AAA server reachability, key size, transport syntax, and both positive/negative login outcomes are confirmed; credentials in the source are fixed examples and must never be copied.
+- Common failure: Telnet is enabled without a compatibility reason, RADIUS/HWTACACS reachability is assumed, source ACL is omitted, or an authenticated session is treated as proof of authorization and least privilege.
+- Implementation order: Establish management path; create keys and AAA method; bind transport and VTY behavior; add source restriction; inspect state; test allowed access, failed authentication, wrong source, and disallowed transport separately.
+- Verification method: Correlate listening transport, AAA/VTY configuration, source restriction, authentication/authorization result, and negative login evidence.
