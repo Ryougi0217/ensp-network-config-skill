@@ -5,8 +5,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 ## DR-PLAT-001: Confirm PoE hardware capability before port configuration
 - Status: validated
 - Tags: poe, hardware, power, platform-support
-- Evidence cases: none; source-reference only
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the Huawei manual `POE配置`; no independent eNSP PoE runtime or target-model confirmation was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: A switch is expected to power APs, phones, cameras, or other PoE endpoints.
 - Design goal: Prevent a software-looking configuration from masking unsupported switch, power-module, or port hardware.
 - Decision logic: Confirm device form factor, model family, installed power capability, software/package support, and endpoint power class; only then plan port-level behavior.
@@ -19,8 +18,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 ## DR-PLAT-002: Allocate limited PoE power by business criticality
 - Status: validated
 - Tags: poe, power-budget, priority, availability
-- Evidence cases: none; source-reference only
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the Huawei manual PoE priority and power-matching discussion; no independent shortage or recovery test was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: Sum of endpoint demand may exceed the usable PoE budget.
 - Design goal: Keep critical endpoints powered and make non-critical degradation predictable.
 - Decision logic: Classify endpoint criticality from the requirement; calculate peak demand and reserve; map priorities; define the shedding order; then configure and observe the result.
@@ -33,8 +31,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 ## DR-STACK-001: Establish stack-member compatibility before cabling
 - Status: validated
 - Tags: stacking, istack, compatibility, software, hardware
-- Evidence cases: none; source-reference only
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the Huawei manual stack compatibility and topology guidance; no independent eNSP stack runtime or target-model confirmation was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: Multiple switches are to operate as one logical stack.
 - Design goal: Avoid building a physically connected but unsupported or unstable stack.
 - Decision logic: Verify member model/form factor, software/VRP compatibility, stack ports/cards/cables, supported topology, and member count before selecting ring or chain wiring.
@@ -47,8 +44,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 ## DR-STACK-002: Plan member IDs, priorities, and roles before enabling stack
 - Status: validated
 - Tags: stacking, member-id, priority, master, standby
-- Evidence cases: none; source-reference only
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the Huawei manual stack ID/priority and role planning guidance; no independent runtime or role-election test was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: A stack needs predictable master/standby selection and stable management identity.
 - Design goal: Make role selection intentional and reduce split-brain or management ambiguity.
 - Decision logic: Assign unique member IDs; rank priorities from the operational requirement; define expected master/standby/linecard roles; record the resulting logical interface impact before applying changes.
@@ -61,8 +57,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 ## DR-STACK-003: Treat stack cabling and enablement as a high-risk change
 - Status: validated
 - Tags: stacking, change-safety, reboot, configuration-loss, rollback
-- Evidence cases: none; source-reference only
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from Huawei manual warnings for `stack enable`, slot changes, non-hot-swappable stack cards, power-down, and reboot; no independent recovery test was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: Enabling stacking, changing member IDs/priorities, installing stack hardware, or connecting stack cables requires a reboot or power cycle.
 - Design goal: Prevent configuration loss, stack split, wrong boot order, and extended outage.
 - Decision logic: Capture current configuration and state; confirm recovery media and maintenance window; power down when hardware requires it; apply one planned change set; cable with verified port direction; boot in order; validate before restoring dependent services.

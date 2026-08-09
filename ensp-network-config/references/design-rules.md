@@ -29,7 +29,7 @@ Use this file to select design-rule catalogs. Rules are portable design constrai
 
 ## Reserved routes
 
-These routes are inactive. Their catalog files may be empty or may contain `candidate` rules for later evaluation. Do not load them in normal projects or list them under Active catalogs until at least one rule is `validated` through the approved case-learning flow or through explicit user-authorized direct adoption whose evidence limitations are recorded in the rule.
+These routes are inactive. Do not ship a catalog file for a reserved route until it contains at least one evaluated rule. Do not load reserved routes in normal projects or list them under Active catalogs until at least one rule is `validated` and its portable evidence level is recorded in the catalog.
 
 | Design domain | Inactive catalog | Intended scope |
 |---|---|---|
@@ -50,7 +50,7 @@ These routes are inactive. Their catalog files may be empty or may contain `cand
 ## Rule status
 
 - `candidate`: extracted and generalized, but unavailable to normal configuration projects.
-- `validated`: passed the approved evaluation flow, or received explicit user-authorized direct adoption with its evidence limitations recorded; available only when trigger and boundary match.
+- `validated`: passed the approved evaluation flow, or received explicitly authorized direct adoption with a portable evidence limitation recorded; available only when trigger and boundary match.
 - `deprecated`: retained for traceability but unavailable to normal projects.
 
 Industry relevance does not prove simulator support. For EVPN/VXLAN, Segment Routing, model-driven management, and other platform-sensitive features, confirm the target device model and VRP/eNSP capability before generating executable commands.

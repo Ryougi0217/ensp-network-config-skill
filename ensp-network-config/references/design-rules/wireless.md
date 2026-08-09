@@ -5,8 +5,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 ## DR-WLAN-001: Separate management VLAN from client service VLANs
 - Status: validated
 - Tags: wlan, ac, ap, management-vlan, service-vlan
-- Evidence cases: `070-wlan-ap-registration`, `072-wlan-user-vlan-egress`
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the exam handbook WLAN topology and configuration screenshots; cases 070 and 072 remain statically validated and pending review, with no independent eNSP rerun.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: An AC/AP WLAN must carry AP management/CAPWAP traffic and wireless user traffic.
 - Design goal: Keep controller/AP management reachability independent from user policy and service addressing.
 - Decision logic: Allocate a management VLAN and one or more service VLANs; carry only the required VLANs across each wired segment; bind AP management to the management path and VAPs to service VLANs.
@@ -19,8 +18,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 ## DR-WLAN-002: Separate AP registration from user association
 - Status: validated
 - Tags: wlan, capwap, ap-registration, sta, association
-- Evidence cases: `070-wlan-ap-registration`, `071-wlan-ssid-security`
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from exam handbook `display ap all` and STA association screenshots; cases 070 and 071 remain statically validated and pending review, with no independent runtime.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: A WLAN deployment reports that an AP is online or that a client can use an SSID.
 - Design goal: Prevent AP control-plane success from being mistaken for client-plane success.
 - Decision logic: Verify management VLAN/CAPWAP and AP authentication first; then verify SSID/VAP/radio binding; finally verify STA association, DHCP, gateway, and application access.
@@ -33,8 +31,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 ## DR-WLAN-003: Keep the WLAN template reference chain complete
 - Status: validated
 - Tags: wlan, ssid, security-profile, vap, radio, ap-group
-- Evidence cases: `071-wlan-ssid-security`
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the exam handbook WLAN template sequence; case 071 remains statically validated and pending review, with no independent runtime.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: An SSID is built from reusable AC WLAN templates.
 - Design goal: Ensure an advertised SSID has a complete security, service, and radio binding path.
 - Decision logic: Create security profile; create SSID profile; create VAP with forwarding/service VLAN; bind both profiles; bind VAP to the AP group and intended radio; inspect the resulting reference chain.
@@ -47,8 +44,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 ## DR-WLAN-004: Prove wired continuity for the selected forwarding mode
 - Status: validated
 - Tags: wlan, tunnel-forward, direct-forward, vlan, gateway, dhcp
-- Evidence cases: `072-wlan-user-vlan-egress`
-- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the exam handbook comparison of tunnel/direct forwarding and guest VLAN configuration; case 072 remains statically validated and pending review, with no independent runtime.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: Wireless users must reach a wired gateway or external network.
 - Design goal: Make the selected forwarding mode and wired VLAN path agree end to end.
 - Decision logic: If tunnel forwarding is selected, validate the CAPWAP/AC service path; if direct forwarding is selected, validate the AP/SW trunk and service VLAN at every hop; then validate DHCP, gateway, route, and return path.

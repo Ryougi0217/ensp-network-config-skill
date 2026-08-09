@@ -5,8 +5,7 @@ Read these rules for MQC classification, actions, attachment, and measurable eff
 ## DR-QOS-001: Keep MQC classification, behavior, policy, attachment, and counters aligned
 - Status: validated
 - Tags: qos, mqc, traffic-classifier, traffic-behavior, traffic-policy, policing, statistics
-- Evidence cases: none; direct source-reference adoption
-- Validation basis: Direct source-rule adoption authorized by the user from the Huawei manual QoS chapter; no independent throughput test, hardware-resource check, current-platform confirmation, or blind test was performed.
+- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Trigger: Traffic must be permitted, denied, redirected, remarked, policed, or counted according to a defined class.
 - Design goal: Turn the service requirement into one traceable chain from packet match to action, attachment point/direction, and measurable result.
 - Decision logic: Derive the traffic class from the requirement; choose one compatible behavior; bind classifier and behavior in a policy; attach the policy at the device, interface, or VLAN scope and direction where the target traffic is actually seen; inspect policy/counters; then measure the requested effect against a baseline.
