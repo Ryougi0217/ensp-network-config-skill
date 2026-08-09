@@ -6,6 +6,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: acl, vty, control-plane, direction, rule-order
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `management-path-ready`
+- Provides: `management-source-policy-ready`
 - Trigger: A device must restrict management or control-plane access with an ACL applied to a VTY or equivalent context.
 - Design goal: Make the protected context, traffic direction, rule order, and underlying reachability explicit before claiming enforcement.
 - Decision logic: Establish the routing path to the management context; define the permit/deny order from the requirement; apply the ACL in the stated direction and context; preserve ambiguous source syntax; then test allowed and denied sources.
@@ -19,6 +21,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: acl, advanced-acl, five-tuple, implicit-deny, negative-test
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `internal-routing-ready`
+- Provides: `authorization-policy-ready`
 - Trigger: An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.
 - Design goal: Distinguish the intended positive or denied tuple from the remaining traffic space and prove both sides of the policy.
 - Decision logic: Define protocol, source, destination, and any port constraints from the requirement; verify the permit rule; choose a reachable alternative destination or tuple for the negative test; inspect the ACL and test both results.
@@ -32,6 +36,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: dhcp-snooping, rogue-dhcp, trusted-port, vlan, access-security
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `layer2-transport-ready`, `address-service-ready`
+- Provides: `source-trust-ready`
 - Trigger: DHCP clients share a Layer-2 access domain where unauthorized DHCP replies must be blocked.
 - Design goal: Allow server-originated DHCP messages only from the legitimate server or relay path while preserving client requests and a usable binding table.
 - Decision logic: Identify the real DHCP server/relay path from the topology; enable Snooping at the required global and VLAN/interface scopes; mark only the server-facing path as trusted; keep client-facing ports untrusted; then compare legitimate and rogue-server outcomes and inspect bindings.
@@ -45,6 +51,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: ipsg, source-guard, dhcp-snooping, ip-mac-binding, access-security
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `source-trust-ready`
+- Provides: `source-identity-policy-ready`
 - Trigger: Access ports must reject hosts whose source IP/MAC/VLAN/interface identity does not match the authorized assignment.
 - Design goal: Prevent address spoofing without blocking legitimate users because the static or DHCP-derived binding table is missing or stale.
 - Decision logic: Choose static bindings for deliberately static clients or DHCP Snooping bindings for dynamic clients; confirm the required identity fields and binding presence; enable source checking only on the intended user-facing scope; then test an authorized tuple and a controlled changed-source tuple.
@@ -58,6 +66,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: firewall, security-zone, trust, dmz, untrust
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `interface-map-confirmed`, `layer3-adjacency-ready`
+- Provides: `firewall-zones-ready`
 - Trigger: A firewall policy refers to trust, DMZ, untrust, or equivalent security zones.
 - Design goal: Make the policy's boundaries meaningful by resolving interface-to-zone membership first.
 - Decision logic: Identify interface roles from the topology; configure and inspect zone membership; only then create source-zone/destination-zone policy and NAT objects.
@@ -71,6 +81,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: firewall, security-policy, direction, least-privilege, service
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `firewall-zones-ready`, `internal-routing-ready`
+- Provides: `security-policy-ready`, `authorization-policy-ready`
 - Trigger: A firewall must permit a specific inter-zone business flow.
 - Design goal: Allow only the required source/destination/service combination and avoid relying on a vague “any-to-any” interpretation.
 - Decision logic: State source zone, destination zone, source/destination scope, protocol/service, action, and rule order; add a reverse/new-session negative assertion.
@@ -84,6 +96,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: firewall, nat, security-policy, source-nat, server-publish
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `security-policy-ready`, `egress-route-resolved`, `return-path-defined`
+- Provides: `firewall-translation-ready`
 - Trigger: A firewall uses source NAT, PAT, or destination/server mapping.
 - Design goal: Keep translation scope and access authorization independently reviewable.
 - Decision logic: Define the required policy first; define only the translation scope needed for the same business flow; verify both policy match and translated session.
@@ -97,6 +111,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: validated
 - Tags: firewall, negative-test, stateful, access-control, verification
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `security-policy-ready`
+- Provides: `security-validation-ready`
 - Trigger: A firewall rule is described as successfully enforcing an access boundary.
 - Design goal: Prove both intended access and the protection against the closest unauthorized flow.
 - Decision logic: For each allow, choose a same-scope positive flow and a reverse/new-session or adjacent-service negative flow; capture rule/session/log evidence for both.
@@ -110,6 +126,8 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Status: candidate
 - Tags: management-access, ssh, stelnet, telnet, radius, hwtacacs, vty, acl
 - Evidence level: candidate; source-derived from AR management examples and not independently runtime-validated in this project.
+- Requires: `management-path-ready`, `platform-support-confirmed`
+- Provides: `management-access-ready`
 - Trigger: A device management requirement combines SSH/STelnet or legacy Telnet with local, RADIUS, or HWTACACS authentication and a source restriction.
 - Design goal: Prevent a successful login in one layer from being mistaken for proof of the transport, identity, authorization, and source-boundary layers.
 - Decision logic: Prefer STelnet/SSH for new management; retain Telnet only for an explicit compatibility requirement; define the management source/interface, AAA method and fallback, VTY transport, user privilege/service, and source ACL independently; then test a permitted login and a controlled rejected source/transport.

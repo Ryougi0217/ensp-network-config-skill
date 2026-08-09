@@ -6,6 +6,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: validated
 - Tags: ppp, pppoe, pap, chap, aaa, authentication
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `interface-map-confirmed`, `platform-support-confirmed`
+- Provides: `wan-session-ready`
 - Trigger: A point-to-point PPP or PPPoE link requires PAP/CHAP or equivalent subscriber authentication.
 - Design goal: Make the authentication direction, credential ownership, and dependent link state unambiguous before using the link for routing or services.
 - Decision logic: Identify the server/authenticator and client/supplicant from the topology; configure the server-side user/service and authentication method; configure the client-side matching identity/secret; keep the bearer, dialer/virtual-template, and authentication roles aligned.
@@ -19,6 +21,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: candidate
 - Tags: pppoe, nat, address-pool, dialer, default-route
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `interface-map-confirmed`, `platform-support-confirmed`
+- Provides: `wan-session-ready`, `egress-route-resolved`
 - Trigger: An edge router must obtain a negotiated PPPoE address and then provide NAT or a default route to an internal network.
 - Design goal: Prevent NAT or routing claims from masking a missing PPPoE session, pool, or virtual-template dependency.
 - Decision logic: Build the server AAA/pool/virtual-template chain and client dialer/bearer binding first; confirm negotiated addressing and session state; then install the default route and apply NAT to the intended outbound interface.
@@ -32,6 +36,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: candidate
 - Tags: wan, serial, hdlc, addressing, static-route, conflict
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `interface-map-confirmed`, `topology-baseline-confirmed`
+- Provides: `layer3-adjacency-ready`
 - Trigger: A serial WAN design depends on slot/index mapping, point-to-point addressing, and a link protocol such as HDLC.
 - Design goal: Make the physical interface identity, peer addresses, link protocol, and static path mutually consistent before claiming WAN reachability.
 - Decision logic: Map topology indexes to actual serial interfaces; preserve source values; resolve duplicate or incomplete interface/address commands with user confirmation or runtime evidence; configure the link protocol on both peers; then inspect serial state and route reachability.
@@ -45,6 +51,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: candidate
 - Tags: ppp, pap, chap, authentication, transition
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `interface-map-confirmed`, `platform-support-confirmed`
+- Provides: `authentication-transition-ready`
 - Trigger: A PPP link must be tested with PAP and then reconfigured for CHAP.
 - Design goal: Keep authentication roles, credentials, cleanup, and reachability assertions tied to the active phase rather than combining incompatible final states.
 - Decision logic: Establish the server/client role and routing baseline; configure and verify PAP; remove PAP state; configure CHAP on the same link; verify CHAP and the required end-to-end path; record any AAA/domain conflict before trusting the phase result.
@@ -58,6 +66,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: validated
 - Tags: ipsec, selector, acl, site-to-site, security-policy
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `internal-routing-ready`, `return-path-defined`
+- Provides: `vpn-selector-ready`
 - Trigger: A site-to-site IPsec policy protects traffic between two private prefixes.
 - Design goal: Ensure both peers classify the same bidirectional traffic for encryption.
 - Decision logic: Derive source/destination selectors from the current topology; compare the reverse selector on the peer; keep routing and NAT exceptions aligned with the selector.
@@ -71,6 +81,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: validated
 - Tags: ipsec, ike, proposal, authentication, algorithm
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `platform-support-confirmed`
+- Provides: `vpn-negotiation-ready`
 - Trigger: IPsec uses manual parameters or IKE negotiation between two peers.
 - Design goal: Prevent a complete-looking policy from failing because one side's authentication, encryption, integrity, DH, or encapsulation parameters differ.
 - Decision logic: Record the selected IKE and IPsec suites as explicit tuples; compare both peers; ensure the policy references the intended proposals/peer; only then interpret SA state.
@@ -82,8 +94,10 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 
 ## DR-IPSEC-003: Plan routing, NAT exemption, and tunnel policy as one dependency chain
 - Status: validated
-- Tags: ipsec, nat, route, default-route, exemption
+- Tags: ipsec, nat, route, default-route, exemption, packet-processing-order
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `vpn-selector-ready`, `vpn-negotiation-ready`, `egress-route-resolved`, `return-path-defined`, `packet-processing-order-defined`
+- Provides: `vpn-policy-ready`
 - Trigger: IPsec and Internet access share an edge device with default routing or source NAT.
 - Design goal: Keep protected site traffic un-NATed while allowing unrelated Internet traffic to use NAT.
 - Decision logic: Derive protected and non-protected flows; make the VPN selector take precedence over NAT matching; verify forward and return routes; then test one flow from each class.
@@ -97,6 +111,8 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Status: validated
 - Tags: ipsec, verification, sa, counters, packet-capture
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `vpn-policy-ready`
+- Provides: `vpn-validation-ready`
 - Trigger: A configuration is being evaluated as an IPsec success.
 - Design goal: Distinguish underlay reachability, negotiation, encryption, and application success.
 - Decision logic: Check peer reachability; check policy/SA state; check bidirectional encrypted counters or ESP; check business reachability; record any layer that is missing.

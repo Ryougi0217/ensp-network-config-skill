@@ -6,6 +6,8 @@ Read these rules for cross-protocol redundancy, failure handling, and operationa
 - Status: candidate
 - Tags: mstp, vrrp, vlan, redundancy
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `layer2-path-plan-ready`, `redundant-gateway-ready`
+- Provides: `redundancy-coordination-ready`
 - Trigger: A VLAN is carried across redundant gateway switches, both have an SVI/VRRP group, and the requirement asks to avoid unnecessary Layer-2 hairpinning.
 - Design goal: Keep the normal Layer-2 forwarding root and the selected gateway on the same device where the topology permits, while preserving a usable backup path.
 - Decision logic: Select the desired gateway per VLAN; derive VRRP priority and MSTP root/path choices together; if the topology cannot align them, state the unavoidable detour and verify it explicitly.
@@ -16,9 +18,11 @@ Read these rules for cross-protocol redundancy, failure handling, and operationa
 - Verification method: Correlate per-VLAN MSTP root/path with VRRP state, then test gateway access after convergence and after the requested fault.
 
 ## DR-MSTP-VRRP-005: Verify redundancy against the stated fault model
-- Status: candidate
+- Status: deprecated
 - Tags: mstp, vrrp, failure, verification
-- Evidence level: candidate; exclude from normal projects until independently validated.
+- Evidence level: deprecated; generic fault-model behavior is owned by verification-rules.md.
+- Requires: `topology-baseline-confirmed`
+- Provides: `fault-test-plan-ready`, `recovery-test-plan-ready`
 - Trigger: The requirement names link failure, gateway/core failure, recovery, or convergence behavior.
 - Design goal: Separate static design plausibility from runtime proof and test every required recovery claim.
 - Decision logic: Define positive and negative assertions for normal operation, each requested fault, and post-convergence recovery; collect minimum status and reachability evidence after the user performs the fault.
@@ -32,6 +36,8 @@ Read these rules for cross-protocol redundancy, failure handling, and operationa
 - Status: validated
 - Tags: bfd, nqa, static-route, tracking, failure, recovery
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `layer3-adjacency-ready`, `internal-routing-ready`
+- Provides: `liveness-tracking-ready`, `fault-test-plan-ready`, `recovery-test-plan-ready`
 - Trigger: A route or gateway decision is attached to BFD/NQA liveness.
 - Design goal: Keep liveness configuration, normal state, fault response, and recovery state observable as separate gates.
 - Decision logic: Confirm peer/probe scope and tracked route; capture normal liveness and route presence; execute the specified fault; capture liveness loss and route withdrawal; restore and capture reinstallation or document platform behavior.

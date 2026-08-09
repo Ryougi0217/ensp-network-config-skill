@@ -6,6 +6,8 @@ This catalog remains reserved. Candidate rules are recorded for research traceab
 - Status: candidate
 - Tags: mpls, ldp, lsp, vpn, te, frr, underlay
 - Evidence level: candidate; extracted from AR chapters 6 and 10 and not independently runtime-validated in this project.
+- Requires: `platform-support-confirmed`, `dynamic-routing-ready`
+- Provides: `mpls-core-ready`, `mpls-service-ready`
 - Trigger: A design uses LDP/static LSP/MPLS TE or carries a VPN service through an MPLS core.
 - Design goal: Prevent an operational LDP/TE state or a source Ping from being generalized into service reachability or protection proof.
 - Decision logic: Confirm model/version support and IGP underlay; assign unique LSR IDs; enable label sessions and required interfaces; define service/label or TE path; inspect LDP/LSP/tunnel state; then test customer flow and the named fault.

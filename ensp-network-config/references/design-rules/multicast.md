@@ -6,6 +6,8 @@ This catalog remains reserved. Candidate rules are recorded for research traceab
 - Status: candidate
 - Tags: multicast, igmp, pim, rp, rpf, snooping
 - Evidence level: candidate; extracted from AR chapter 9 examples and not independently runtime-validated in this project.
+- Requires: `platform-support-confirmed`, `internal-routing-ready`
+- Provides: `multicast-service-ready`
 - Trigger: A design must deliver multicast data to receivers through IGMP/PIM, a static/dynamic RP, or an IGMP Snooping policy.
 - Design goal: Keep global/interface protocol state, source RPF routing, receiver membership, and actual forwarding as separate claims.
 - Decision logic: Enable multicast routing and the intended interface roles; establish unicast reachability for RPF; align PIM/RP or SSM parameters; enable IGMP or Snooping only on receiver-facing scope; then inspect membership, routing, and forwarding state.

@@ -37,15 +37,21 @@ For staged mode, persist complete planning data under `planning/` and show only 
 
 When the baseline changes, perform impact analysis and ask whether to rework. Do not silently invalidate prior results. If the user declines rework, either keep the old baseline active or record forced continuation with unresolved risk.
 
-When the task involves a covered technology, read [design-rules.md](references/design-rules.md) first and follow its routing table. Load only the catalog or catalogs listed under Active catalogs whose tags match the current task; do not load every catalog, and do not treat catalog names embedded elsewhere as a whitelist. Use matching `validated` rules, then re-derive device roles, interfaces, VLANs, addresses, VRIDs, priorities, costs, and verification from the current topology. Never copy concrete case parameters or configurations. Ignore rules whose triggers or boundaries do not match; on conflict, prioritize confirmed project evidence and report it. Use `candidate` rules only in an explicit evaluation flow, never in normal projects.
+Use [rule-flow.md](references/rule-flow.md) to build the project decision chain. Normalize requirements and topology into tags, hard protocol constraints, scope references, and required outcomes; query `references/rule-index.json` with `scripts/rule_flow.py` before loading rule bodies. Search active validated rules first. Search candidate or reserved rules only when validated coverage is missing, the user explicitly requires that protocol, or the user requests evaluation.
+
+Persist the selected scoped instances, capability dependencies, requirement coverage, choice groups, and assertion references in `planning/rule-plan-vN.yaml`. Run `scripts/rule_flow.py validate` before baseline confirmation. Simple mode uses the same interface with a minimal plan. Candidate rules are advisory only and never alter the normal configuration chain.
+
+Use matching validated rules to re-derive device roles, interfaces, VLANs, addresses, VRIDs, priorities, costs, and verification from the current topology. Never copy concrete case parameters or configurations. Ignore rules whose triggers or boundaries do not match. Resolve conflicts by the precedence in `rule-flow.md`, and record the decision with a reason code.
 
 ## 3. Build the stage dependency plan
 
 Follow the stage skeleton and status model in [project-workflow.md](references/project-workflow.md). Use a network layer or independent fault domain as the normal gate size. Execute serially by default; identify safe parallel branches and let the user choose whether to parallelize them. Define positive and negative functional assertions before generating each stage script.
 
+Before working on a stage, run `scripts/rule_flow.py context` for that stage. Load only the generated context pack, compact upstream capability results, current unresolved conflicts, and current-stage planning data. If the context budget is exceeded, split the stage by network layer or independent business or fault domain.
+
 ## 4. Generate one TXT per stage
 
-Read [vrp-patterns.md](references/vrp-patterns.md) and follow the Stage TXT contract and static delivery gate in [project-workflow.md](references/project-workflow.md). Generate complete Huawei VRP command forms from the confirmed baseline; do not make an unproven template renderer a dependency. Write full scripts to versioned files and show only summaries and links in chat.
+Read only the matching sections of [vrp-patterns.md](references/vrp-patterns.md) and follow the Stage TXT contract and static delivery gate in [project-workflow.md](references/project-workflow.md). Generate complete Huawei VRP command forms from the confirmed baseline; do not make an unproven template renderer a dependency. Write full scripts to versioned files and show only summaries and links in chat.
 
 Run `scripts/validate_stage_script.py` before delivery. Automatically repair only mechanical representation errors. Ask before changing IPs, VLANs, ports, areas, Router IDs, next hops, policies, links, or any confirmed design value.
 

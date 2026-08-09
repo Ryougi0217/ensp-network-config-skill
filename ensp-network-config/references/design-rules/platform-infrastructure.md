@@ -6,6 +6,8 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Status: validated
 - Tags: poe, hardware, power, platform-support
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `hardware-inventory-confirmed`, `platform-support-confirmed`
+- Provides: `poe-capability-confirmed`
 - Trigger: A switch is expected to power APs, phones, cameras, or other PoE endpoints.
 - Design goal: Prevent a software-looking configuration from masking unsupported switch, power-module, or port hardware.
 - Decision logic: Confirm device form factor, model family, installed power capability, software/package support, and endpoint power class; only then plan port-level behavior.
@@ -19,6 +21,8 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Status: validated
 - Tags: poe, power-budget, priority, availability
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `poe-capability-confirmed`
+- Provides: `poe-budget-ready`
 - Trigger: Sum of endpoint demand may exceed the usable PoE budget.
 - Design goal: Keep critical endpoints powered and make non-critical degradation predictable.
 - Decision logic: Classify endpoint criticality from the requirement; calculate peak demand and reserve; map priorities; define the shedding order; then configure and observe the result.
@@ -32,6 +36,8 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Status: validated
 - Tags: stacking, istack, compatibility, software, hardware
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `hardware-inventory-confirmed`, `platform-support-confirmed`
+- Provides: `stack-compatibility-confirmed`
 - Trigger: Multiple switches are to operate as one logical stack.
 - Design goal: Avoid building a physically connected but unsupported or unstable stack.
 - Decision logic: Verify member model/form factor, software/VRP compatibility, stack ports/cards/cables, supported topology, and member count before selecting ring or chain wiring.
@@ -45,6 +51,8 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Status: validated
 - Tags: stacking, member-id, priority, master, standby
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `stack-compatibility-confirmed`
+- Provides: `stack-role-plan-ready`
 - Trigger: A stack needs predictable master/standby selection and stable management identity.
 - Design goal: Make role selection intentional and reduce split-brain or management ambiguity.
 - Decision logic: Assign unique member IDs; rank priorities from the operational requirement; define expected master/standby/linecard roles; record the resulting logical interface impact before applying changes.
@@ -58,6 +66,8 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Status: validated
 - Tags: stacking, change-safety, reboot, configuration-loss, rollback
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `stack-role-plan-ready`, `change-baseline-ready`
+- Provides: `stack-change-plan-ready`
 - Trigger: Enabling stacking, changing member IDs/priorities, installing stack hardware, or connecting stack cables requires a reboot or power cycle.
 - Design goal: Prevent configuration loss, stack split, wrong boot order, and extended outage.
 - Decision logic: Capture current configuration and state; confirm recovery media and maintenance window; power down when hardware requires it; apply one planned change set; cable with verified port direction; boot in order; validate before restoring dependent services.

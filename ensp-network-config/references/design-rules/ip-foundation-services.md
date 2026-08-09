@@ -6,6 +6,8 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Status: candidate
 - Tags: ipv4, adjacency, arp, proxy-arp, reachability
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `interface-map-confirmed`, `topology-baseline-confirmed`
+- Provides: `layer3-adjacency-ready`, `neighbor-resolution-ready`
 - Trigger: A design claims IPv4 reachability across a direct or routed interface, especially when ARP or Proxy ARP affects neighbor resolution.
 - Design goal: Keep address/subnet structure, neighbor-resolution state, and endpoint reachability as separate evidence layers.
 - Decision logic: Confirm interface roles and address masks; identify whether the destination is directly on-link or requires routing/Proxy ARP; inspect the relevant ARP state; then test the required endpoint path without silently rewriting source masks or example MAC values.
@@ -19,6 +21,8 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Status: validated
 - Tags: dhcp, address-pool, interface-pool, global-pool, lease
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `gateway-ready`
+- Provides: `address-service-ready`
 - Trigger: A router must allocate addresses to clients on one or more directly attached LANs.
 - Design goal: Make the selection between interface-scoped and global pools explicit while keeping gateway, exclusion, DNS, and lease claims tied to runtime allocation evidence.
 - Decision logic: Derive the client network and gateway from the current interface; choose interface address-pool selection for local/simple scope or an explicitly named global pool for reusable policy; bind each pool to the correct client-facing interface; then verify lease, gateway, and options from the client or server state.
@@ -32,6 +36,8 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Status: validated
 - Tags: dhcp, global-pool, interface-pool, phase-transition, lease
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `gateway-ready`
+- Provides: `address-service-transition-ready`
 - Trigger: Source material demonstrates more than one DHCP allocation mode on the same VLANIF topology.
 - Design goal: Prevent a lease or option observation from one mode being attributed to another mode or to a simultaneous final state.
 - Decision logic: Label the active mode; record pool selection and options; clear or explicitly transition the previous mode; renew clients; then inspect lease, gateway, DNS, exclusion, and pool usage for the active phase.
@@ -45,6 +51,8 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Status: candidate
 - Tags: dhcp, relay, server-group, return-route, reachability
 - Evidence level: candidate; extracted from source examples, but not independently runtime-validated in this project.
+- Requires: `layer3-adjacency-ready`, `internal-routing-ready`, `return-path-defined`
+- Provides: `address-service-ready`
 - Trigger: DHCP clients and the DHCP server are on different subnets and a router or gateway relays the request.
 - Design goal: Keep client-to-relay attachment, relay-to-server reachability, and server-to-client return routing explicit before interpreting a lease.
 - Decision logic: Derive the client subnet and relay interface from the topology; define the server group and relay selection on the client-facing interface; confirm routes in both directions; then renew a client and correlate relay/server state with the lease.

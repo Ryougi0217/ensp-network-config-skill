@@ -6,6 +6,8 @@ Read these rules for device-management reachability, monitoring access, and even
 - Status: validated
 - Tags: snmp, nms, mib-view, acl, trap, inform, management
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `management-path-ready`, `management-access-ready`
+- Provides: `monitoring-ready`
 - Trigger: A network-management system must poll a device or receive device notifications through SNMP.
 - Design goal: Keep management reachability, protocol version, credentials/security level, managed MIB scope, permitted NMS sources, and notification target mutually consistent.
 - Decision logic: Confirm the management path; select the SNMP version from the current security policy and platform support; restrict NMS sources and MIB scope; configure community-based access only when explicitly accepted or configure a version-3 user/group with the required authentication/privacy level; align Trap/Inform target parameters with the same version and security identity; then verify polling and one controlled notification.

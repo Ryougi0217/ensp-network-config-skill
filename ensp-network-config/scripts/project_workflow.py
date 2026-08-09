@@ -106,6 +106,7 @@ def render_stage_plan(project_dir: Path, data: dict[str, Any]) -> None:
         f"mode: {yaml_scalar(data['mode'])}",
         f"baseline_version: {yaml_scalar(data['baseline']['version'])}",
         f"baseline_status: {yaml_scalar(data['baseline']['status'])}",
+        f"active_rule_plan: {yaml_scalar(data.get('active_rule_plan'))}",
         "stages:",
     ]
     for stage in data["stages"]:
@@ -127,7 +128,7 @@ def create_project(path: Path, name: str, mode: str) -> Path:
     if project_dir.exists() and any(project_dir.iterdir()):
         raise SystemExit(f"目标目录非空，拒绝覆盖: {project_dir}")
     project_dir.mkdir(parents=True, exist_ok=True)
-    for relative in ("planning", "scripts", "validation", "evidence"):
+    for relative in ("planning", "planning/context", "scripts", "validation", "evidence"):
         (project_dir / relative).mkdir()
 
     project_id = safe_project_id(name)
@@ -140,6 +141,7 @@ def create_project(path: Path, name: str, mode: str) -> Path:
         "mode": mode,
         "result_state": "planning",
         "baseline": {"version": "v0", "status": "draft", "confirmed_by": None, "confirmed_at": None},
+        "active_rule_plan": "planning/rule-plan-v0.yaml",
         "active_stage_id": None,
         "stages": [
             {
@@ -173,6 +175,17 @@ def create_project(path: Path, name: str, mode: str) -> Path:
         "schema_version: \"1.0.0\"\nstatus: draft\nrequirements: []\n",
         encoding="utf-8",
     )
+    (project_dir / "planning" / "rule-plan-v0.yaml").write_text(
+        "schema_version: \"1.0.0\"\n"
+        "baseline_version: \"v0\"\n"
+        f"mode: {mode}\n"
+        "requirements: []\n"
+        "choice_groups: []\n"
+        "capabilities: []\n"
+        "instances: []\n",
+        encoding="utf-8",
+    )
+    (project_dir / "planning" / "rule-selection-log.jsonl").write_text("", encoding="utf-8")
     planning_files = {
         "网络设备与链路规划.txt": "网络设备与链路规划\n状态：待提取与确认\n",
         "VLAN与网关规划.txt": "VLAN与网关规划\n状态：待提取与确认\n",
@@ -190,6 +203,52 @@ def find_stage(data: dict[str, Any], stage_id: str) -> dict[str, Any]:
         if stage["id"] == stage_id:
             return stage
     raise SystemExit(f"不存在阶段: {stage_id}")
+
+
+def validate_and_version_rule_plan(
+    project_dir: Path, data: dict[str, Any], target_version: str
+) -> tuple[str, list[str]]:
+    from rule_flow import current_index, load_capability_contract, load_document, validate_plan
+
+    relative = Path(str(data.get("active_rule_plan") or "planning/rule-plan-v0.yaml"))
+    source = (project_dir / relative).resolve()
+    try:
+        source.relative_to(project_dir.resolve())
+    except ValueError as exc:
+        raise SystemExit(f"规则计划必须位于项目目录内: {source}") from exc
+    if not source.is_file():
+        raise SystemExit(f"规则计划不存在: {source}")
+
+    plan_data = load_document(source)
+    if plan_data.get("mode") != data.get("mode"):
+        raise SystemExit(
+            f"规则计划模式与项目不一致: plan={plan_data.get('mode')!r}, project={data.get('mode')!r}"
+        )
+    if plan_data.get("baseline_version") != data["baseline"]["version"]:
+        raise SystemExit(
+            "规则计划版本与当前草稿基线不一致: "
+            f"plan={plan_data.get('baseline_version')!r}, project={data['baseline']['version']!r}"
+        )
+    report = validate_plan(plan_data, current_index(), load_capability_contract())
+    if not report["valid"]:
+        details = "\n".join(f"- {item}" for item in report["errors"])
+        raise SystemExit(f"规则计划未通过校验，不能确认基线:\n{details}")
+
+    target_relative = Path("planning") / f"rule-plan-{target_version}.yaml"
+    target = project_dir / target_relative
+    if target.exists() and target.resolve() != source:
+        raise SystemExit(f"目标规则计划已存在，拒绝覆盖: {target}")
+    rendered, count = re.subn(
+        r"(?m)^baseline_version:\s*.*$",
+        f"baseline_version: {json.dumps(target_version, ensure_ascii=False)}",
+        source.read_text(encoding="utf-8-sig"),
+        count=1,
+    )
+    if count != 1:
+        raise SystemExit(f"规则计划缺少 baseline_version: {source}")
+    if target.resolve() != source:
+        target.write_text(rendered, encoding="utf-8")
+    return target_relative.as_posix(), report["warnings"]
 
 
 def dependencies_satisfied(data: dict[str, Any], stage: dict[str, Any]) -> bool:
@@ -309,6 +368,7 @@ def print_status(data: dict[str, Any]) -> None:
     print(f"项目: {data['name']} ({data['project_id']})")
     print(f"模式: {data['mode']}  基线: {data['baseline']['version']} / {data['baseline']['status']}")
     print(f"项目状态: {data['result_state']}  当前阶段: {data.get('active_stage_id') or '-'}")
+    print(f"规则计划: {data.get('active_rule_plan') or '-'}")
     print("阶段:")
     for stage in data["stages"]:
         script = stage.get("current_script") or "-"
@@ -373,15 +433,22 @@ def main() -> int:
         if data["baseline"]["status"] == "confirmed":
             raise SystemExit("基线已经确认；变更时应先执行影响分析和 invalidate。")
         version_number = int(str(data["baseline"]["version"]).lstrip("v") or 0) + 1
+        target_version = f"v{version_number}"
+        active_rule_plan, rule_warnings = validate_and_version_rule_plan(project_dir, data, target_version)
         data["baseline"] = {
-            "version": f"v{version_number}",
+            "version": target_version,
             "status": "confirmed",
             "confirmed_by": args.by,
             "confirmed_at": now(),
         }
+        data["active_rule_plan"] = active_rule_plan
         update_active_stage(data)
         save_project(project_dir, data)
         print(f"已确认基线 {data['baseline']['version']}；当前阶段: {data['active_stage_id']}")
+        if rule_warnings:
+            print("规则计划警告:")
+            for warning in rule_warnings:
+                print(f"  - {warning}")
         return 0
     if args.command == "transition":
         transition_stage(data, args.stage_id, args.state, args.reason, args.evidence_type, args.script)

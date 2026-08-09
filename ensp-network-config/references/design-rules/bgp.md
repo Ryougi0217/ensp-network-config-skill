@@ -6,6 +6,8 @@ This catalog remains reserved. Candidate rules are recorded for research traceab
 - Status: candidate
 - Tags: bgp, address-family, route-policy, next-hop, route-selection
 - Evidence level: candidate; extracted from AR chapter 8 examples and not independently runtime-validated in this project.
+- Requires: `platform-support-confirmed`, `layer3-adjacency-ready`, `internal-routing-ready`
+- Provides: `bgp-control-plane-ready`, `dynamic-routing-ready`
 - Trigger: A design uses BGP or MP-BGP and claims that a prefix is exchanged, preferred, or switched after a failure.
 - Design goal: Keep peer session state, address-family enablement, policy attachment, next-hop resolution, and selected-route evidence distinct.
 - Decision logic: Confirm underlay reachability and peer AS/role; enable the intended address family; attach import/export policy and next-hop handling; inspect peer and received/advertised routes; then execute the required path/failure test.

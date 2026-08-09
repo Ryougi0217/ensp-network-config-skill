@@ -5,12 +5,13 @@
 1. Project modes
 2. Project directory
 3. Planning baseline
-4. Stage skeleton and status
-5. Stage TXT contract
-6. Static delivery gate
-7. Runtime gate
-8. Failure, reset, and change handling
-9. Completion and case learning
+4. Rule-plan context
+5. Stage skeleton and status
+6. Stage TXT contract
+7. Static delivery gate
+8. Runtime gate
+9. Failure, reset, and change handling
+10. Completion and case learning
 
 ## 1. Project modes
 
@@ -48,6 +49,9 @@ projects/PROJECT-SLUG/
 ├── requirements.yaml
 ├── stage-plan.yaml
 ├── planning/
+│   ├── rule-plan-v0.yaml
+│   ├── rule-selection-log.jsonl
+│   ├── context/
 │   ├── 网络设备与链路规划.txt
 │   ├── VLAN与网关规划.txt
 │   ├── 终端与服务器地址规划.txt
@@ -83,7 +87,26 @@ Never generate commands for an unresolved used interface.
 
 Confirm the baseline once. Increment its version after an approved change. Do not repeat full tables in chat.
 
-## 4. Stage skeleton and status
+Before confirmation, create `planning/rule-plan-v0.yaml` from [rule-flow.md](rule-flow.md), cover every confirmed requirement, and run:
+
+```powershell
+python scripts\rule_flow.py validate projects\PROJECT\planning\rule-plan-v0.yaml
+```
+
+Baseline confirmation versions the validated rule plan to the same `vN` as the planning baseline. Confirm once; request confirmation again only when a change alters requirements, selected methods, scope, security posture, unsupported work, or downstream rework.
+
+## 4. Rule-plan context
+
+Use metadata-first discovery. Query the generated index, then load full rule bodies only for the current stage:
+
+```powershell
+python scripts\rule_flow.py query --tags vlan mstp vrrp
+python scripts\rule_flow.py context projects\PROJECT\planning\rule-plan-v1.yaml --stage 01-access --output projects\PROJECT\planning\context\01-access.md
+```
+
+The active rule plan contains applied, advisory, or currently blocked instances only. Write skipped, duplicate, and superseded selection decisions to `planning/rule-selection-log.jsonl`. After a stage passes, keep compact capability and evidence references but drop its rule bodies from active context. Never load source-learning reports or the case corpus during normal project execution.
+
+## 5. Stage skeleton and status
 
 Use this skeleton and dynamically skip or split stages:
 
@@ -118,7 +141,7 @@ Use these stage states:
 
 Only `passed` permits normal automatic advancement. `forced_pass` permits advancement only after the user explicitly chooses it and leaves a project risk.
 
-## 5. Stage TXT contract
+## 6. Stage TXT contract
 
 Create one versioned TXT per stage. Use UTF-8 and stable machine-readable section markers:
 
@@ -153,7 +176,7 @@ Rules:
 
 The user copies one device block at a time. Section markers are file navigation aids, not VRP commands.
 
-## 6. Static delivery gate
+## 7. Static delivery gate
 
 Before delivery:
 
@@ -168,7 +191,7 @@ Before delivery:
 
 Automatically repair only mechanical issues such as representation, block ordering, or unambiguous command expansion. Ask before changing any confirmed network-design value.
 
-## 7. Runtime gate
+## 8. Runtime gate
 
 Define assertions before configuration. Use the smallest evidence set that proves the stage goal.
 
@@ -203,7 +226,7 @@ Return `passed` only when every required assertion passed, `failed` when any req
 
 Ping success records `reachable`; ignore timing, TTL, packet sequence, and redundant reverse Ping unless direction is part of policy.
 
-## 8. Failure, reset, and change handling
+## 9. Failure, reset, and change handling
 
 On failure:
 
@@ -223,7 +246,7 @@ When the baseline changes:
 
 If the user rejects rework, either keep the old baseline active or record forced adoption with unresolved risk. Never preserve a normal pass against an incompatible new baseline.
 
-## 9. Completion and case learning
+## 10. Completion and case learning
 
 After all stage gates, generate `98-全网验收.txt` from the original confirmed requirements. Include all required positive and negative outcomes and every forced-risk retest.
 

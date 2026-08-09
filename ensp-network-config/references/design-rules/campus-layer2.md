@@ -6,6 +6,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: validated
 - Tags: mstp, vlan, load-sharing
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `layer2-transport-ready`, `loop-domain-defined`
+- Provides: `layer2-path-plan-ready`
 - Trigger: Multiple VLANs share a Layer-2 loop domain and the requirements distinguish their normal forwarding paths or gateway ownership.
 - Design goal: Keep the instance map compact while giving each distinct forwarding intent an independently selectable root/path.
 - Decision logic: Group VLANs that have the same required forwarding behavior; choose an instance root and path from the current topology; tune costs only when the topology needs path steering. Do not assume one instance per VLAN.
@@ -19,6 +21,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: validated
 - Tags: mstp, region, vlan, consistency
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `vlan-roles-defined`, `loop-domain-defined`
+- Provides: `mst-region-ready`
 - Trigger: Two or more switches participate in the same MSTP region.
 - Design goal: Ensure every participating switch computes the same region and instance topology rather than accidentally creating region boundaries.
 - Decision logic: Define one project-specific region identity and VLAN map, apply it to every intended member, and compare the resulting state before selecting roots or costs.
@@ -32,6 +36,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: validated
 - Tags: vlan, access, trunk, stp, mstp, layer2
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `interface-map-confirmed`, `vlan-roles-defined`
+- Provides: `layer2-transport-ready`
 - Trigger: Endpoints in one or more VLANs must cross multiple switches or redundant Layer-2 links.
 - Design goal: Make the VLAN transport domain complete and explicit before using STP/MSTP to reason about loops and forwarding paths.
 - Decision logic: Derive endpoint access membership from the requirement; identify every inter-switch transport link; carry the required VLAN set across each intended path, including the logical aggregation interface when present; then select STP/MSTP roots and paths.
@@ -45,6 +51,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: validated
 - Tags: vlan, hybrid, pvid, isolation, inter-vlan
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `interface-map-confirmed`, `vlan-roles-defined`
+- Provides: `layer2-isolation-ready`
 - Trigger: Multiple endpoint-facing VLANs must remain isolated while a parent or routed VLAN must cross an upstream Hybrid/Trunk boundary.
 - Design goal: Preserve the required child/subordinate isolation while carrying only the intended parent and routed VLAN semantics upstream.
 - Decision logic: Assign each endpoint-facing port the PVID for its own local domain; choose tagged/untagged membership from the required ingress/egress behavior; carry the parent/routed VLAN on the upstream path; configure the Layer-3 gateway only for the domains that must communicate.
@@ -58,6 +66,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: candidate
 - Tags: mux-vlan, principal, group, separate, isolation
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `interface-map-confirmed`, `vlan-roles-defined`
+- Provides: `layer2-isolation-ready`
 - Trigger: A Layer-2 design requires a principal service endpoint, group-member communication, and separate-member isolation in one broadcast domain.
 - Design goal: Encode the intended principal/group/separate relationship without confusing shared Layer-2 adjacency with permitted application reachability.
 - Decision logic: Choose one principal role and the group/separate roles from the requirement; apply the same role map across participating switches; enable MUX behavior on the intended access ports; carry all required roles across the inter-switch transport.
@@ -71,6 +81,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: candidate
 - Tags: stp, root-bridge, path-selection, cost, vlan
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `layer2-transport-ready`, `loop-domain-defined`
+- Provides: `layer2-path-plan-ready`
 - Trigger: A Layer-2 loop must use a specified root bridge or engineered forwarding path under classic STP.
 - Design goal: Make the root and cost plan explainable from the topology instead of copying cost values or assuming the shortest path is selected.
 - Decision logic: Select the root from the requirement and graph; compare candidate paths; apply costs only where needed to make the requested path win; keep trunk transport complete; verify the actual blocked/forwarding state.
@@ -84,6 +96,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: validated
 - Tags: eth-trunk, lacp, link-aggregation, failure, vlan
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `interface-map-confirmed`, `parallel-links-confirmed`
+- Provides: `aggregation-ready`, `layer2-transport-ready`
 - Trigger: Parallel Layer-2 links must be represented by one logical aggregation and remain usable after a member failure.
 - Design goal: Keep aggregation mode, member selection, active-link limits, and failure recovery as one explicit profile rather than merging alternative configurations.
 - Decision logic: Select manual or LACP mode from the requirement; remove any prior membership before changing mode; derive eligible members from the current parallel-link topology; set limits or priorities only when required; inspect the logical trunk and execute the requested member-failure test.
@@ -97,6 +111,8 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Status: candidate
 - Tags: rstp, convergence, edge-port, bpdu-protection, loop-protection
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `layer2-transport-ready`, `loop-domain-defined`
+- Provides: `layer2-path-plan-ready`, `fault-test-plan-ready`
 - Trigger: A design uses RSTP root roles, a controlled link failure, and edge/protection features.
 - Design goal: Verify root selection and convergence without turning inferred user-port or upstream-protection contexts into fixed configuration.
 - Decision logic: Establish the RSTP mode and root roles; select a topology-aligned failure target; inspect port roles before and after the failure; resolve edge, BPDU-protection, and loop-protection targets from the actual topology; then test each protection effect independently.

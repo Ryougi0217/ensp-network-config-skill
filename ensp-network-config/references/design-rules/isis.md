@@ -6,6 +6,8 @@ This catalog remains reserved. Candidate rules are recorded for research traceab
 - Status: candidate
 - Tags: isis, net, level, area, adjacency, route-learning
 - Evidence level: candidate; extracted from AR chapter 8 examples and not independently runtime-validated in this project.
+- Requires: `platform-support-confirmed`, `layer3-adjacency-ready`
+- Provides: `isis-control-plane-ready`, `dynamic-routing-ready`
 - Trigger: A design uses IS-IS or IS-IS for IPv6 and claims adjacency or learned routes.
 - Design goal: Keep process identity, NET/area, level scope, interface enablement, and learned-route evidence aligned.
 - Decision logic: Derive the intended level and area from the topology; assign unique NETs and system IDs; enable IS-IS on the required interfaces and address families; inspect adjacency; then verify learned routes and endpoint paths.

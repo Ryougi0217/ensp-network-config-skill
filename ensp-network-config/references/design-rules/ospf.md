@@ -6,6 +6,8 @@ Read these rules for OSPF area layout, adjacency dependencies, and route-learnin
 - Status: validated
 - Tags: ospf, multiarea, abr, router-id, routing
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `layer3-adjacency-ready`, `topology-baseline-confirmed`
+- Provides: `dynamic-routing-ready`, `internal-routing-ready`
 - Trigger: The topology or requirement uses multiple OSPF areas and requires inter-area reachability.
 - Design goal: Keep the backbone and area boundaries explicit so every non-backbone area has a valid route to the OSPF transit domain.
 - Decision logic: Identify the backbone area and each ABR from the current graph; assign every routed link, LAN, and loopback to the intended area; use unique Router IDs; configure special-area behavior only after the ordinary area adjacency and route scope are consistent.
@@ -19,6 +21,8 @@ Read these rules for OSPF area layout, adjacency dependencies, and route-learnin
 - Status: candidate
 - Tags: ospf, nssa, stub, totally-stub, area-policy
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `dynamic-routing-ready`
+- Provides: `route-policy-ready`
 - Trigger: The requirement explicitly asks for NSSA, stub, totally stub, summary suppression, or a comparable special-area behavior.
 - Design goal: Make the area policy predictable by applying the same area type semantics to the correct edge and internal members while preserving the ABR boundary.
 - Decision logic: Identify the area edge/ABR and all area members from the topology; select the special-area type from the requirement's route-visibility/default-route goal; apply compatible member settings and verify the resulting route scope before adding gateway or service dependencies.
@@ -32,6 +36,8 @@ Read these rules for OSPF area layout, adjacency dependencies, and route-learnin
 - Status: validated
 - Tags: ospf, single-area, adjacency, route-learning, verification
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `layer3-adjacency-ready`
+- Provides: `dynamic-routing-ready`, `internal-routing-ready`
 - Trigger: A single-area OSPF design claims that internal VLAN or loopback prefixes are reachable through a transit link.
 - Design goal: Prevent explicit network statements or one Full-neighbor screenshot from being treated as proof of the complete route and endpoint behavior.
 - Decision logic: Confirm unique Router IDs and area/network scope; verify the intended adjacency; inspect learned prefixes on the receiving device; then test the required endpoint path.

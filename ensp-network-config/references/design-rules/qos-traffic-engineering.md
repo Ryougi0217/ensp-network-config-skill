@@ -6,6 +6,8 @@ Read these rules for MQC classification, actions, attachment, and measurable eff
 - Status: validated
 - Tags: qos, mqc, traffic-classifier, traffic-behavior, traffic-policy, policing, statistics
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `internal-routing-ready`, `packet-identity-visible`
+- Provides: `qos-policy-ready`
 - Trigger: Traffic must be permitted, denied, redirected, remarked, policed, or counted according to a defined class.
 - Design goal: Turn the service requirement into one traceable chain from packet match to action, attachment point/direction, and measurable result.
 - Decision logic: Derive the traffic class from the requirement; choose one compatible behavior; bind classifier and behavior in a policy; attach the policy at the device, interface, or VLAN scope and direction where the target traffic is actually seen; inspect policy/counters; then measure the requested effect against a baseline.
@@ -17,8 +19,10 @@ Read these rules for MQC classification, actions, attachment, and measurable eff
 
 ## DR-QOS-002: Place identity-sensitive policing where the original identity is visible
 - Status: candidate
-- Tags: qos, policing, pre-nat, post-nat, direction, source-ip, destination-ip, counters
+- Tags: qos, policing, pre-nat, post-nat, direction, source-ip, destination-ip, counters, packet-processing-order
 - Evidence level: candidate; source-derived from S V600 and AR QoS examples and not independently runtime-validated in this project.
+- Requires: `egress-route-resolved`, `packet-processing-order-defined`, `packet-identity-visible`
+- Provides: `qos-policy-ready`
 - Trigger: Per-IP, per-subnet, or service policing must remain tied to an address identity while traffic crosses NAT or dual exits.
 - Design goal: Align classifier visibility, traffic direction, NAT phase, and counter evidence so the configured identity is the identity actually matched.
 - Decision logic: Determine whether the requirement is upload/source-based or download/destination-based; locate the interface and direction before NAT for the original identity; define the classifier and rate/burst values; attach the policy there; then compare pre/post-NAT counters and an unaffected flow.

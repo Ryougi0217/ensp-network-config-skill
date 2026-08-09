@@ -6,6 +6,8 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Status: validated
 - Tags: static-route, asymmetric-routing, return-path, verification
 - Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
+- Requires: `layer3-adjacency-ready`
+- Provides: `forward-path-defined`, `return-path-defined`, `internal-routing-ready`
 - Trigger: Endpoints require directed forwarding paths, primary/backup static routes, or any behavior where the forward and return paths may differ.
 - Design goal: Make reachability, route installation, and path direction independently explainable for both traffic directions.
 - Decision logic: Derive the forward and reverse path from the current topology and requirements; check a destination route or default-route decision at every transit and edge device; specify primary and alternate choices separately; never infer the return path from a successful forward test.
@@ -19,6 +21,8 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Status: candidate
 - Tags: static-route, floating-static, preference, load-balance, failover
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `layer3-adjacency-ready`, `forward-path-defined`, `return-path-defined`
+- Provides: `alternate-path-ready`
 - Trigger: A design needs an active static route, a higher-preference backup, or a later equal-preference load-sharing stage.
 - Design goal: Make route selection changes observable and reversible instead of assuming that adding a second route changes the forwarding state as intended.
 - Decision logic: Establish the direct/primary route first; add the alternate with an explicitly higher preference; inspect active and hidden entries; test the requested link/device fault; only then attempt equal-preference load sharing and confirm whether the platform updated or duplicated prior entries.
@@ -32,6 +36,8 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Status: validated
 - Tags: rip, dynamic-routing, route-learning, debugging
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `layer3-adjacency-ready`
+- Provides: `dynamic-routing-ready`, `internal-routing-ready`
 - Trigger: A project introduces RIP or another dynamic-routing process and claims that remote prefixes have been learned.
 - Design goal: Keep protocol configuration, version/method scope, process state, and learned-route results as separate claims.
 - Decision logic: Derive participating interfaces and advertised networks from the topology; state the protocol/version actually present in the source; verify process and peer/update state; then verify the expected learned prefixes and reachability.
@@ -45,6 +51,8 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Status: validated
 - Tags: rip, ospf, route-learning, source-evidence, verification
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
+- Requires: `topology-baseline-confirmed`
+- Provides: `validation-scope-ready`
 - Trigger: A screenshot or excerpt contains a dynamic-routing peer, route, or path result for only one device or phase.
 - Design goal: Preserve the observed scope and avoid expanding one protocol output into a claim about every participant or endpoint.
 - Decision logic: Identify the device, command, phase, peer, and prefixes visible in the evidence; normalize method statements separately; require independent state and reachability evidence for claims outside that scope.
@@ -58,6 +66,8 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 - Status: candidate
 - Tags: rip, route-filter, acl, ip-prefix, policy-attachment
 - Evidence level: candidate; exclude from normal projects until independently validated.
+- Requires: `dynamic-routing-ready`
+- Provides: `route-policy-ready`
 - Trigger: A route filter, ACL, or IP Prefix object is defined for a routing protocol.
 - Design goal: Prevent an unattached or untested policy object from being described as an active route-filtering behavior.
 - Decision logic: Record the match rules and ordering; identify the protocol and direction of attachment; verify the attachment command; inspect the filtered/learned result; preserve overlapping source prefixes and missing application commands as evidence boundaries.
@@ -69,8 +79,10 @@ Read these rules for static routing, dynamic routing method boundaries, route pr
 
 ## DR-PBR-001: Order specific policy-route exceptions before generic redirects
 - Status: candidate
-- Tags: pbr, multi-exit, classifier, behavior, traffic-policy, redirect, precedence
+- Tags: pbr, multi-exit, classifier, behavior, traffic-policy, redirect, precedence, packet-processing-order
 - Evidence level: candidate; source-derived from S V600 and AR examples, without an independent runtime run in this project.
+- Requires: `internal-routing-ready`, `egress-route-resolved`, `packet-processing-order-defined`, `packet-identity-visible`
+- Provides: `policy-routing-ready`
 - Trigger: Policy-based routing sends selected traffic to an exit or next hop while an exception must preserve an internal, published-service, or source-specific path.
 - Design goal: Make policy classification, behavior, attachment direction, and precedence explainable for both the exception and the generic redirect.
 - Decision logic: Define the narrow exception first; define the generic redirect separately; bind classifier and behavior in an ordered policy on the interface and direction where the original packet is visible; inspect the applied policy and records; then trace the exact exception and generic flows.

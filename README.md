@@ -15,6 +15,8 @@
 - 按需将阶段脚本拼接为全网最终配置
 - 在配置完成后由用户决定是否保存为案例
 - 从已验证案例中使用可迁移的设计规则，不复制案例参数与脚本
+- 通过能力依赖图把规则组合成项目决策链，而不是一次加载全部规则
+- 为每个阶段生成有预算限制的规则上下文，减少模型上下文压力
 - 对授权导入的案例执行确定性结构与配置校验
 
 ## 仓库结构
@@ -25,8 +27,14 @@ ensp-network-config/
 ├── agents/
 ├── references/
 │   ├── design-rules.md
-│   └── design-rules/
+│   ├── design-rules/
+│   ├── rule-flow.md
+│   ├── rule-capabilities.json
+│   ├── rule-index.json
+│   └── project-workflow.md
 └── scripts/
+    ├── project_workflow.py
+    └── rule_flow.py
 ```
 
 ## 安装
@@ -47,9 +55,26 @@ python -m pip install -r requirements.txt
 
 ## 设计规则
 
-`references/design-rules.md`是设计规则索引。Skill根据当前任务按需读取对应分类，不会一次加载全部规则。已有规则只作为可迁移的设计约束；设备、端口、VLAN、地址、VRID、优先级和成本必须根据当前拓扑重新计算。
+`references/design-rules.md`是规则目录路由表，`references/rule-index.json`是可查询的规则元数据索引。Skill先根据需求和拓扑查询索引，再只读取当前阶段需要的规则正文，不会一次加载全部规则。已有规则只作为可迁移的设计约束；设备、端口、VLAN、地址、VRID、优先级和成本必须根据当前拓扑重新计算。
 
-当前已验证规则覆盖园区二层、网关边界与可靠性/OAM。OSPF、BGP、IS-IS、组播、MPLS、EVPN/VXLAN、Segment Routing和QoS等分类已经预留，等待后续案例验证后填充。
+当前规则覆盖园区二层、网关与冗余、IPv4/DHCP、静态与动态路由、WAN/IPsec、访问安全与防火墙、PoE与堆叠、WLAN、QoS、SNMP等领域。BGP、IS-IS、组播和MPLS已有候选规则，但在独立验证前只能作为建议，不能进入正式配置链；EVPN/VXLAN和Segment Routing继续保留为空目录。
+
+规则状态分为`validated`、`candidate`和`deprecated`。项目中另行记录规则是否应用以及验证是否通过，避免把“写进规则”“用于项目”和“运行成功”混为一谈。
+
+## 规则流与上下文控制
+
+大型或多协议项目使用`planning/rule-plan-vN.yaml`保存规则实例、能力依赖、需求覆盖和验证引用。常用命令：
+
+```powershell
+python ensp-network-config/scripts/rule_flow.py index --check
+python ensp-network-config/scripts/rule_flow.py query --tags vlan mstp vrrp
+python ensp-network-config/scripts/rule_flow.py validate projects/hotel/planning/rule-plan-v1.yaml
+python ensp-network-config/scripts/rule_flow.py context projects/hotel/planning/rule-plan-v1.yaml `
+  --stage 01-access `
+  --output projects/hotel/planning/context/01-access.md
+```
+
+默认每个阶段最多加载12条规则正文、4个规则目录和3条候选建议。超过预算时，应按网络层次或独立业务/故障域拆分阶段。
 
 ## 项目工作流
 
@@ -79,7 +104,7 @@ python ensp-network-config/scripts/project_workflow.py confirm-baseline projects
 python ensp-network-config/scripts/project_workflow.py status projects/hotel
 ```
 
-简单拓扑使用`--mode simple`，仍然保留项目状态，但只有一个配置阶段。
+初始化会创建`planning/rule-plan-v0.yaml`、规则选择日志和阶段上下文目录。确认基线前会校验规则计划，并生成与基线一致的`rule-plan-v1.yaml`。简单拓扑使用`--mode simple`，仍然使用同一接口，但只有一个配置阶段。
 
 ## 阶段TXT格式
 
@@ -147,4 +172,4 @@ python ensp-network-config/scripts/validate_case.py cases/case-01
 - 不把静态检查等同于运行成功
 - 不经用户明确授权导入案例或更新能力矩阵
 
-详细规则见[项目工作流](ensp-network-config/references/project-workflow.md)。
+详细规则见[规则流](ensp-network-config/references/rule-flow.md)和[项目工作流](ensp-network-config/references/project-workflow.md)。
