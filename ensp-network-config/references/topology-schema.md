@@ -43,7 +43,7 @@ Record only observed or confirmed interfaces. Model optional modules as properti
 }
 ```
 
-Allowed device types include `router`, `switch`, `layer3_switch`, `host`, `server`, and `cloud`. Preserve an unknown type as `unknown` and ask for confirmation.
+Allowed device types include `router`, `switch`, `layer3_switch`, `firewall`, `wireless_controller`, `access_point`, `wireless_client`, `host`, `server`, and `cloud`. Preserve an unknown type as `unknown` and ask for confirmation. Use `wireless_controller` for an AC, `access_point` for an AP, and `wireless_client` for a STA when the source identifies those roles.
 
 ## Link
 

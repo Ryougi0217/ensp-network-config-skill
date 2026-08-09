@@ -1,0 +1,115 @@
+# Security and Access Design Rules
+
+Read these rules for ACL scope, DHCP trust boundaries, source validation, and positive/negative access assertions. Match each trigger and boundary before use.
+
+## DR-ACL-001: Bind an ACL to the intended control-plane context and direction
+- Status: validated
+- Tags: acl, vty, control-plane, direction, rule-order
+- Evidence cases: `034-acl-basic`
+- Validation basis: Direct source-rule adoption authorized by the user; the Huawei manual explains that an ACL must be attached to a feature/context and shows VTY direction handling, while case 034 and independent permit/deny runtime evidence remain pending.
+- Trigger: A device must restrict management or control-plane access with an ACL applied to a VTY or equivalent context.
+- Design goal: Make the protected context, traffic direction, rule order, and underlying reachability explicit before claiming enforcement.
+- Decision logic: Establish the routing path to the management context; define the permit/deny order from the requirement; apply the ACL in the stated direction and context; preserve ambiguous source syntax; then test allowed and denied sources.
+- Recompute parameters: Protected context, source/destination scope, ACL type and identifier, rule order, direction, authentication mode, and positive/negative test sources.
+- Applicability boundary: An ACL object or static route to the device does not prove enforcement; require runtime permit/deny outcomes before claiming the access policy succeeded.
+- Common failure: The ACL is applied to the wrong direction/context, a deny precedes the intended permit, or a source syntax anomaly is silently normalized into a different policy.
+- Implementation order: Confirm routing; define ordered rules; apply to the intended management context; inspect the resulting ACL; then test both permitted and denied sources.
+- Verification method: Correlate route reachability, ACL display, application context/direction, and access outcomes.
+
+## DR-ACL-002: Prove five-tuple permits together with an explicit negative destination
+- Status: validated
+- Tags: acl, advanced-acl, five-tuple, implicit-deny, negative-test
+- Evidence cases: `035-acl-advanced`
+- Validation basis: Direct source-rule adoption authorized by the user; the Huawei manual explains ordered advanced ACL matching and classifier/behavior attachment, while case 035 and independent positive/negative runtime evidence remain pending.
+- Trigger: An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.
+- Design goal: Distinguish the intended positive or denied tuple from the remaining traffic space and prove both sides of the policy.
+- Decision logic: Define protocol, source, destination, and any port constraints from the requirement; verify the permit rule; choose a reachable alternative destination or tuple for the negative test; inspect the ACL and test both results.
+- Recompute parameters: Protocol, source prefix, destination prefix, destination service, ACL context/direction, and negative assertion.
+- Applicability boundary: Until both positive and negative runtime outcomes are observed, treat an implicit deny as a policy expectation rather than evidence of an actual blocked session.
+- Common failure: A permitted destination is tested but the negative destination is omitted, or a test-label mismatch is treated as a second source without a literal command.
+- Implementation order: Establish route reachability; configure the exact tuple; verify context/direction; inspect policy; then execute positive and negative tests.
+- Verification method: Use route output, ACL state, and separate access results for the permitted and denied tuples.
+
+## DR-DHCPSEC-001: Place DHCP trust only on the legitimate server path
+- Status: validated
+- Tags: dhcp-snooping, rogue-dhcp, trusted-port, vlan, access-security
+- Evidence cases: none; direct source-reference adoption
+- Validation basis: Direct source-rule adoption authorized by the user from the Huawei manual DHCP Snooping chapter; no independent eNSP runtime, rogue-server test, or current-platform confirmation was performed.
+- Trigger: DHCP clients share a Layer-2 access domain where unauthorized DHCP replies must be blocked.
+- Design goal: Allow server-originated DHCP messages only from the legitimate server or relay path while preserving client requests and a usable binding table.
+- Decision logic: Identify the real DHCP server/relay path from the topology; enable Snooping at the required global and VLAN/interface scopes; mark only the server-facing path as trusted; keep client-facing ports untrusted; then compare legitimate and rogue-server outcomes and inspect bindings.
+- Recompute parameters: Client VLANs, server/relay location, trusted uplinks, client-facing ports, trunk path, Snooping scope, and legitimate/rogue assertions.
+- Applicability boundary: Confirm device and VRP/eNSP support and account for relays, stacked devices, and multiple legitimate server paths; never mark a broad user-facing segment trusted merely to make DHCP work.
+- Common failure: The client port is trusted, the actual server path is not trusted, Snooping is enabled at only one required scope, or a lease is treated as proof that rogue replies are blocked.
+- Implementation order: Confirm DHCP path; establish normal allocation; enable Snooping; trust only the legitimate server path; inspect bindings; test valid allocation and the explicitly controlled rogue-server case.
+- Verification method: Correlate trust state, Snooping bindings, legitimate lease acquisition, and rejected unauthorized server behavior.
+
+## DR-IPSG-001: Enforce source identity only after the binding source is complete
+- Status: validated
+- Tags: ipsg, source-guard, dhcp-snooping, ip-mac-binding, access-security
+- Evidence cases: none; direct source-reference adoption
+- Validation basis: Direct source-rule adoption authorized by the user from the Huawei manual IPSG chapter; no independent eNSP runtime, changed-address test, or current-platform confirmation was performed.
+- Trigger: Access ports must reject hosts whose source IP/MAC/VLAN/interface identity does not match the authorized assignment.
+- Design goal: Prevent address spoofing without blocking legitimate users because the static or DHCP-derived binding table is missing or stale.
+- Decision logic: Choose static bindings for deliberately static clients or DHCP Snooping bindings for dynamic clients; confirm the required identity fields and binding presence; enable source checking only on the intended user-facing scope; then test an authorized tuple and a controlled changed-source tuple.
+- Recompute parameters: Binding source, client IP/MAC/VLAN/interface tuple, enforcement interfaces or VLANs, DHCP trust path, and positive/negative source assertions.
+- Applicability boundary: Confirm platform support and binding completeness before enforcement; dynamic IPSG depends on correct DHCP Snooping, and incomplete bindings can deny valid traffic.
+- Common failure: Enforcement is enabled before bindings exist, a dynamic client is represented by a stale static tuple, or checking is applied to an infrastructure/server-facing link.
+- Implementation order: Confirm client addressing mode; build and inspect bindings; select user-facing enforcement scope; enable source checking; test the authorized identity; then test one controlled spoofed identity.
+- Verification method: Compare binding-table state with permitted legitimate traffic and denied mismatched source traffic on the exact enforcement scope.
+
+## DR-FW-001: Assign firewall interfaces to zones before writing policy
+- Status: validated
+- Tags: firewall, security-zone, trust, dmz, untrust
+- Evidence cases: `066-firewall-zone-policy`, `067-firewall-egress-nat`, `068-firewall-server-publishing`
+- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from exam handbook firewall interface and zone configuration; cases 066-068 remain statically validated and pending review, with no independent eNSP/USG runtime.
+- Trigger: A firewall policy refers to trust, DMZ, untrust, or equivalent security zones.
+- Design goal: Make the policy's boundaries meaningful by resolving interface-to-zone membership first.
+- Decision logic: Identify interface roles from the topology; configure and inspect zone membership; only then create source-zone/destination-zone policy and NAT objects.
+- Recompute parameters: Interface identity, zone role, subnet, security-level/default behavior, transit path, and policy direction.
+- Applicability boundary: Zone names and default inter-zone behavior vary by firewall model/version; do not infer policy effect from object existence.
+- Common failure: An interface is in the wrong zone, a DMZ interface is omitted, or a policy is evaluated in an unintended direction.
+- Implementation order: Address interfaces; assign zones; inspect zones; define policy; define NAT; test positive and negative flows.
+- Verification method: Correlate zone display, policy match, session table, and source/destination test results.
+
+## DR-FW-002: Express firewall policy direction and scope explicitly
+- Status: validated
+- Tags: firewall, security-policy, direction, least-privilege, service
+- Evidence cases: `066-firewall-zone-policy`, `068-firewall-server-publishing`, `069-firewall-negative-deny`
+- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from exam handbook source-zone/destination-zone policy examples; cases 066, 068, and 069 remain statically validated and pending review, with no independent runtime.
+- Trigger: A firewall must permit a specific inter-zone business flow.
+- Design goal: Allow only the required source/destination/service combination and avoid relying on a vague “any-to-any” interpretation.
+- Decision logic: State source zone, destination zone, source/destination scope, protocol/service, action, and rule order; add a reverse/new-session negative assertion.
+- Recompute parameters: Zones, prefixes, service/port, policy name/order, source restrictions, and negative test path.
+- Applicability boundary: Statefulness and default deny/permit behavior vary; confirm target firewall semantics before claiming reverse blocking.
+- Common failure: Only the direction label is tested, a publish rule permits an entire DMZ, or rule order makes a later deny unreachable.
+- Implementation order: Define minimal scope; create rule; inspect ordering; test allowed service; test reverse/new session and adjacent service.
+- Verification method: Use policy counters/logs, session table, positive result, and explicit negative result.
+
+## DR-FW-003: Treat NAT as address transformation, not authorization
+- Status: validated
+- Tags: firewall, nat, security-policy, source-nat, server-publish
+- Evidence cases: `067-firewall-egress-nat`, `068-firewall-server-publishing`
+- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from exam handbook egress NAT, session table, and server publication examples; cases 067 and 068 remain statically validated and pending review, with no independent runtime.
+- Trigger: A firewall uses source NAT, PAT, or destination/server mapping.
+- Design goal: Keep translation scope and access authorization independently reviewable.
+- Decision logic: Define the required policy first; define only the translation scope needed for the same business flow; verify both policy match and translated session.
+- Recompute parameters: Private/public addresses, ports, protocol, translation mode, address pool, source/destination zones, return path, and service scope.
+- Applicability boundary: A successful translation does not prove policy authorization or return-path correctness; platform processing order must be confirmed.
+- Common failure: NAT is configured without a permit policy, a broad pool translates protected traffic, or server publication exposes extra ports.
+- Implementation order: Zone/policy; route; NAT object; binding; session; positive/negative service tests.
+- Verification method: Check policy action, NAT/session translation, and endpoint behavior separately.
+
+## DR-FW-004: Pair every allow rule with a deliberate deny test
+- Status: validated
+- Tags: firewall, negative-test, stateful, access-control, verification
+- Evidence cases: `066-firewall-zone-policy`, `069-firewall-negative-deny`
+- Validation basis: Direct source-rule adoption authorized by the user on 2026-08-09 from the exam handbook requirement that inside users can initiate outward access while outside cannot initiate inward access; cases 066 and 069 remain statically validated and pending review, and reverse runtime evidence remains incomplete.
+- Trigger: A firewall rule is described as successfully enforcing an access boundary.
+- Design goal: Prove both intended access and the protection against the closest unauthorized flow.
+- Decision logic: For each allow, choose a same-scope positive flow and a reverse/new-session or adjacent-service negative flow; capture rule/session/log evidence for both.
+- Recompute parameters: Positive source/destination/service, negative source/destination/service, statefulness, NAT dependency, and expected log/session behavior.
+- Applicability boundary: A failed Ping can reflect routing/NAT/host issues; classify the layer before calling it a firewall deny.
+- Common failure: Only the positive path is tested, a reverse established flow is confused with a new session, or a NAT failure is misreported as policy denial.
+- Implementation order: Establish underlay; inspect zones; test positive; initiate controlled negative; inspect policy/session/logs; report the failure layer.
+- Verification method: Require separate positive/negative outcomes and policy/session evidence tied to the exact flow.

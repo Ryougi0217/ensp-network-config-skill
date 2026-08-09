@@ -52,19 +52,160 @@ Check:
 - Required LAN and Loopback prefixes are advertised.
 - Every required neighbor has compatible area and subnet settings.
 
-## Existing configuration
+## DHCP pool scope and phase boundaries
 
-Treat removal and replacement as higher risk than addition. Before changing an existing lab:
+    dhcp enable
+    ip pool <pool-name>
+     network <client-prefix> mask <mask>
+     gateway-list <gateway-address>
+     dns-list <dns-address> ...
+     excluded-ip-address <first-excluded> <last-excluded>
+    interface Vlanif<id>
+     dhcp select global
 
-- inspect `display current-configuration`
-- identify existing interface, VLAN, and routing ownership
-- produce an incremental change set
-- explain destructive or compatibility risks before delivery
+For an interface address pool, use dhcp select interface and keep
+interface-pool options under that SVI. Treat global-pool and interface-pool
+experiments as separate phases: clear or document the transition, then verify
+the client lease, gateway, DNS, and lease duration for the active phase.
 
-Do not generate command-level rollback scripts. If partial execution or rework makes the actual state uncertain, identify the smallest affected device set, ask whether the user wants to reset it, and let the user perform all clearing operations. Rebuild from persisted cumulative stage scripts after reset.
+## Static default and return-path pairing
 
-Do not include `save` in stage scripts. Let the user decide whether to persist a stage after its gate passes.
+    ip route-static 0.0.0.0 0 <forward-next-hop>
+    ip route-static <inside-prefix> <mask> <return-next-hop>
+
+A default route on one device does not establish the return path. Derive
+forward and reverse obligations from the current topology, inspect both route
+tables, and use path output only for the exact source/destination pair tested.
+
+## RIPv2 method versus learned routes
+
+    rip <process-id>
+     version 2
+     undo summary
+     network <major-network>
+
+Record the protocol version, process scope, and advertised networks separately
+from peer state and learned-route output. Do not claim convergence from a
+configuration snippet or from a title-only reference to RIPv2.
+
+## VRRP gateway ownership and transition
+
+    interface Vlanif<id>
+     vrrp vrid <vrid> virtual-ip <virtual-ip>
+     vrrp vrid <vrid> priority <priority>
+
+Recompute the real SVI addresses, virtual IP, VRID, priorities, and client
+gateway for each VLAN. A priority change can demonstrate a role transition,
+but it is not equivalent to the required gateway/link failure and recovery
+test; capture normal, fault, and restored states separately.
+
+## BFD-tracked static route
+
+    bfd
+    bfd <session-name> bind peer-ip <peer-ip> source-ip <source-ip>
+     discriminator local <local-id>
+     discriminator remote <remote-id>
+     commit
+    ip route-static <destination-prefix> <mask> <next-hop> track bfd-session <session-name>
+
+This pattern is platform- and simulator-sensitive. Verify the session state,
+route presence, route withdrawal after the specified fault, and route
+reinstallation after restoration before treating it as a reusable design
+pattern. One-arm echo is a separate capability.
+
+## NQA ICMP result
+
+    nqa test-instance <admin-name> <test-name>
+     test-type icmp
+     frequency <seconds>
+     probe-count <count>
+     destination-address ipv4 <destination>
+     start now
+    display nqa results test-instance <admin-name> <test-name>
+
+Use the result as evidence for the exact probe and time window. A successful
+sample or zero-loss result is not a general service-level objective and should
+not be reused as a current performance guarantee.
 
 ## Abbreviations
 
 Accept common lab abbreviations such as `int`, `ip ad`, `v b`, `a`, and `n` as input. Expand them in final configurations to improve reviewability.
+
+## IPsec policy composition and layered verification
+
+    acl <selector-id>
+     rule <sequence> permit ip source <local-prefix> <wildcard> destination <remote-prefix> <wildcard>
+    ipsec proposal <proposal-name>
+     esp authentication-algorithm <integrity-algorithm>
+     esp encryption-algorithm <encryption-algorithm>
+    ipsec policy <policy-name> <sequence> manual
+     security acl <selector-id>
+     proposal <proposal-name>
+     tunnel local <local-peer-address>
+     tunnel remote <remote-peer-address>
+    interface <egress-interface>
+     ipsec policy <policy-name>
+    display ipsec sa brief
+
+Treat the selector, proposal, policy reference, interface, underlay route, and
+return route as one dependency chain. Verify peer reachability, both SA
+directions, encrypted counters/ESP, and the protected business flow separately.
+
+## IPsec and NAT coexistence
+
+    acl <vpn-selector-id>
+     rule <sequence> permit ip source <local-prefix> <wildcard> destination <remote-prefix> <wildcard>
+    acl <nat-selector-id>
+     rule <sequence> deny ip source <local-prefix> <wildcard> destination <remote-prefix> <wildcard>
+     rule <later-sequence> permit ip source <internet-source-scope> <wildcard>
+    interface <egress-interface>
+     nat outbound <nat-selector-id>
+
+Use platform-specific NAT-exemption or deny-first semantics only after confirming
+the processing order. Verify one protected flow and one non-protected NAT flow;
+do not infer the exemption from a successful SA alone.
+
+## Firewall zones, policy, and translation
+
+    firewall zone <zone-name>
+     add interface <interface>
+    security-policy
+     rule name <rule-name>
+      source-zone <source-zone>
+      destination-zone <destination-zone>
+      source-address <source-scope>
+      destination-address <destination-scope>
+      action permit
+    nat-policy
+     rule name <nat-rule-name>
+      source-zone <source-zone>
+      destination-zone <destination-zone>
+      action source-nat <translation-object>
+
+For server publication, use the target firewall's server-mapping syntax and
+pair it with an exact untrust-to-DMZ permit. NAT transforms addresses; it does
+not replace the security policy. Verify policy match, translated session, and
+an explicit negative service or direction.
+
+## WLAN AC/AP template chain
+
+    interface Vlanif<management-vlan>
+     ip address <management-gateway> <mask>
+    capwap source interface Vlanif<management-vlan>
+    wlan
+     security-profile name <security-profile>
+     ssid-profile name <ssid-profile>
+      ssid <ssid>
+     vap-profile name <vap-profile>
+      forward-mode <tunnel-or-direct>
+      service-vlan vlan-id <service-vlan>
+      security-profile <security-profile>
+      ssid-profile <ssid-profile>
+     ap-group name <ap-group>
+      vap-profile <vap-profile> wlan <wlan-id> radio <radio-id>
+    display ap all
+
+The exact AC syntax is model/version dependent. Keep management VLAN,
+service VLAN, security, SSID, VAP, AP-group, and radio references explicit.
+`display ap all` proves AP control-plane state only; verify STA association,
+DHCP/gateway, and egress as separate assertions.
