@@ -10,11 +10,11 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Provides: `wan-session-ready`
 - Trigger: A point-to-point PPP or PPPoE link requires PAP/CHAP or equivalent subscriber authentication.
 - Design goal: Make the authentication direction, credential ownership, and dependent link state unambiguous before using the link for routing or services.
-- Decision logic: Identify the server/authenticator and client/supplicant from the topology; configure the server-side user/service and authentication method; configure the client-side matching identity/secret; keep the bearer, dialer/virtual-template, and authentication roles aligned.
-- Recompute parameters: Server/client roles, authentication method, user identity, credential storage form, serial or Ethernet bearer, dialer/virtual-template identifiers, and address-negotiation behavior.
+- Decision logic: Identify the server/authenticator and client/supplicant from the topology. For PPPoE, keep the server AAA user/service, address pool, Virtual-Template, authentication mode, and bearer binding complete; keep the client `dialer-rule`, Dialer interface, `dialer user`, bundle, `dialer-group`, credentials, negotiated address, and bearer `pppoe-client` binding complete. Add default routing and NAT only when the client role requires them.
+- Recompute parameters: Server/client roles, authentication method, user identity, credential storage form, address pool and gateway, bearer interface, dialer-rule/group/bundle, Dialer/Virtual-Template identifiers, address negotiation, default route, and NAT scope.
 - Applicability boundary: Reassess when the link is not PPP/PPPoE, when authentication is delegated externally, or when the target VRP/eNSP version changes supported syntax.
-- Common failure: Both peers act as clients, the server lacks a PPP service user, PAP/CHAP methods disagree, or the session is assumed usable before authentication reaches an operational state.
-- Implementation order: Confirm the bearer and addressing context; configure server authentication; configure client credentials and binding; verify the PPP session and peer address; only then add routing, NAT, or application tests.
+- Common failure: Both peers act as clients, the server lacks a PPP service user or pool binding, the client omits `dialer-rule` or `dialer-group`, PAP/CHAP methods disagree, or NAT/default routing masks a missing session.
+- Implementation order: Confirm bearer and addressing; configure the complete server AAA/pool/Virtual-Template chain; configure the complete client dialer rule/interface/group/bundle and bearer binding; verify session and negotiated address; only then add routing, NAT, or application tests.
 - Verification method: Check the negotiated/session state and authentication role, then run a positive peer or downstream reachability test. Do not infer session success from a complete-looking configuration alone.
 
 ## DR-PPP-002: Treat PPPoE address negotiation as a prerequisite to edge services
@@ -77,26 +77,26 @@ Read these rules for PPP, PPPoE, GRE, IPsec, and related WAN dependency decision
 - Implementation order: Confirm underlay; define both selectors; align route/NAT; attach policy; inspect SA; test bidirectional protected traffic.
 - Verification method: Compare selectors, SA endpoints, encrypted counters/ESP, and bidirectional business reachability.
 
-## DR-IPSEC-002: Keep IKE and IPsec proposals paired across both peers
+## DR-IPSEC-002: Choose one IPsec keying mode and keep both peers symmetric
 - Status: validated
-- Tags: ipsec, ike, proposal, authentication, algorithm
+- Tags: ipsec, ike, manual, keying, proposal, authentication, algorithm
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `platform-support-confirmed`
-- Provides: `vpn-negotiation-ready`
-- Trigger: IPsec uses manual parameters or IKE negotiation between two peers.
-- Design goal: Prevent a complete-looking policy from failing because one side's authentication, encryption, integrity, DH, or encapsulation parameters differ.
-- Decision logic: Record the selected IKE and IPsec suites as explicit tuples; compare both peers; ensure the policy references the intended proposals/peer; only then interpret SA state.
-- Recompute parameters: IKE version, authentication method/material, encryption/integrity algorithms, DH group, encapsulation, peer address, proposal identifiers, and policy reference.
-- Applicability boundary: Algorithm support and command hierarchy vary by device/version; do not infer interoperability from vendor naming alone.
-- Common failure: IKE parameters match but IPsec proposal differs, a policy references the wrong proposal, or a manual SPI/key is asymmetric.
-- Implementation order: Confirm platform support; define IKE; define IPsec proposal; bind peer/policy; apply interface; inspect SA and counters.
-- Verification method: Compare both configurations, negotiation/SA state, algorithm display, and encrypted traffic.
+- Provides: `vpn-keying-ready`
+- Trigger: A site-to-site IPsec policy uses either manually configured SA parameters or IKE negotiation between two peers.
+- Design goal: Select one keying model and keep both peers' algorithms, identities, and directional parameters symmetric without mixing manual and negotiated state.
+- Decision logic: Select exactly one `ipsec-keying-mode` for the tunnel scope. In `manual` mode, configure no IKE peer/proposal; pair each local outbound SPI/key with the remote inbound SPI/key and each local inbound SPI/key with the remote outbound values. In `ike` mode, configure no manual SPI/key; match IKE version, authentication material, IKE suite, IPsec proposal, peer identity/address, and policy references across both peers. Interpret SA state only after the selected branch is complete.
+- Recompute parameters: Keying mode, peer addresses, IPsec encryption/integrity algorithms, encapsulation, proposal and policy identifiers; for manual mode, both directional SPI/key pairs; for IKE mode, IKE version, authentication method/material, encryption/integrity suite, DH group, and peer/proposal references.
+- Applicability boundary: Do not combine manual and IKE keying in one policy scope. Confirm target device/version command hierarchy and algorithm support; do not infer the mode or suite from a reference example.
+- Common failure: A manual policy also contains IKE objects, an IKE policy retains manual SPI/key commands, directional manual values are not inverse-matched across peers, or the IKE and IPsec suites differ between peers.
+- Implementation order: Confirm platform support and select the keying mode; define the common IPsec proposal; configure only the manual SA branch or only the IKE branch; bind the selected policy; apply the interface; inspect SA, algorithms, and counters.
+- Verification method: Confirm the selected mode and absence of the opposite branch, compare both peers' common proposal plus mode-specific parameters, then inspect SA state, encrypted counters/ESP, and protected traffic.
 
 ## DR-IPSEC-003: Plan routing, NAT exemption, and tunnel policy as one dependency chain
 - Status: validated
 - Tags: ipsec, nat, route, default-route, exemption, packet-processing-order
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
-- Requires: `vpn-selector-ready`, `vpn-negotiation-ready`, `egress-route-resolved`, `return-path-defined`, `packet-processing-order-defined`
+- Requires: `vpn-selector-ready`, `vpn-keying-ready`, `egress-route-resolved`, `return-path-defined`, `packet-processing-order-defined`
 - Provides: `vpn-policy-ready`
 - Trigger: IPsec and Internet access share an edge device with default routing or source NAT.
 - Design goal: Keep protected site traffic un-NATed while allowing unrelated Internet traffic to use NAT.

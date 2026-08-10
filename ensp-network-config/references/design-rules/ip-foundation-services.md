@@ -25,7 +25,7 @@ Read these rules for basic IPv4 adjacency, ARP/Proxy ARP, and DHCP service depen
 - Provides: `address-service-ready`
 - Trigger: A router must allocate addresses to clients on one or more directly attached LANs.
 - Design goal: Make the selection between interface-scoped and global pools explicit while keeping gateway, exclusion, DNS, and lease claims tied to runtime allocation evidence.
-- Decision logic: Derive the client network and gateway from the current interface; choose interface address-pool selection for local/simple scope or an explicitly named global pool for reusable policy; bind each pool to the correct client-facing interface; then verify lease, gateway, and options from the client or server state.
+- Decision logic: Derive the client network and gateway need from the current interface and required client behavior; choose interface address-pool selection for local/simple scope or an explicitly named global pool for reusable policy; bind each pool to the correct client-facing interface; add only the selected gateway, DNS, exclusion, and lease options; then verify the lease and those selected options from the client or server state.
 - Recompute parameters: Client VLAN/LAN, server interface, pool mode/name, network, gateway, excluded range, lease duration, DNS, and endpoint pre-test state.
 - Applicability boundary: Do not claim successful allocation or options without current runtime lease evidence; static PC settings and an excluded address are source observations, not proof of DHCP behavior.
 - Common failure: A global pool is bound to the wrong interface, a saved static address is mistaken for a lease, or configured options are claimed without a lease/output observation.

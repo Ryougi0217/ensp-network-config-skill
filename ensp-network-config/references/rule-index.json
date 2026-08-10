@@ -41,7 +41,9 @@
         "acl",
         "advanced-acl",
         "five-tuple",
-        "implicit-deny",
+        "placement",
+        "direction",
+        "original-source",
         "negative-test"
       ],
       "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
@@ -52,11 +54,11 @@
         "authorization-policy-ready"
       ],
       "trigger": "An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.",
-      "applicability_boundary": "Until both positive and negative runtime outcomes are observed, treat an implicit deny as a policy expectation rather than evidence of an actual blocked session.",
+      "applicability_boundary": "A project may require physical-port placement, but Vlanif or policy-context ACLs remain valid in other designs. A failed bidirectional Ping after blocking one direction proves only that reachability assertion, not comprehensive control of every protocol or reverse/new session.",
       "file": "references/design-rules/security-access.md",
       "start_line": 20,
       "end_line": 33,
-      "content_sha256": "e88c8bfd2d34b7149a24e49c89e0eff5ec0773f99b57fbc5f77594350b272ff5"
+      "content_sha256": "c5ebbb4d6249fc4ce47f35ea13cc617c18be13a39a46351b4eee71a1e592f44e"
     },
     {
       "id": "DR-BGP-001",
@@ -86,7 +88,7 @@
       "file": "references/design-rules/bgp.md",
       "start_line": 5,
       "end_line": 18,
-      "content_sha256": "1873a3495e2fd7b0a5f4815bdf29aa2292ae0206dc6ece803b7cfdf3fa2e804d"
+      "content_sha256": "ba05b780a8eba1de39c39681d5347c5a4dda623ddffbbeb7d2d066861a760f94"
     },
     {
       "id": "DR-DHCP-001",
@@ -113,7 +115,7 @@
       "file": "references/design-rules/ip-foundation-services.md",
       "start_line": 20,
       "end_line": 33,
-      "content_sha256": "30e20df5ea57b2def5ab6f8cbfb3a9ae6a7093a7d65bdd2b067a93470b1dd8b2"
+      "content_sha256": "7596314ee7d1123131e05985b0a90502a9444f206bf6e7654e396719829da4f2"
     },
     {
       "id": "DR-DHCP-002",
@@ -418,11 +420,11 @@
         "layer2-isolation-ready"
       ],
       "trigger": "Multiple endpoint-facing VLANs must remain isolated while a parent or routed VLAN must cross an upstream Hybrid/Trunk boundary.",
-      "applicability_boundary": "Do not use when endpoints should share one ordinary access VLAN, when the platform does not support the required Hybrid semantics, or when isolation is enforced by an explicit security policy instead.",
+      "applicability_boundary": "Use parent/child fan-in only when child VLANs are local Layer-2 isolation domains that intentionally share one parent subnet and gateway. Do not treat it as a generic replacement for Trunk, MUX VLAN, Super-VLAN, or policy isolation; stop when platform Hybrid semantics or the bidirectional return behavior is unconfirmed.",
       "file": "references/design-rules/campus-layer2.md",
       "start_line": 50,
       "end_line": 63,
-      "content_sha256": "df63ac504e9fbca76134325ec5f69df7766481e1349e0ae59e28a4d60fa70243"
+      "content_sha256": "97bee8f95c5681d21a8ac0633efbaedf82aab5f9080314061da41fc53b8f32d0"
     },
     {
       "id": "DR-IP-001",
@@ -483,13 +485,15 @@
     },
     {
       "id": "DR-IPSEC-002",
-      "title": "Keep IKE and IPsec proposals paired across both peers",
+      "title": "Choose one IPsec keying mode and keep both peers symmetric",
       "status": "validated",
       "catalog": "wan-tunneling.md",
       "catalog_state": "active",
       "tags": [
         "ipsec",
         "ike",
+        "manual",
+        "keying",
         "proposal",
         "authentication",
         "algorithm"
@@ -499,14 +503,14 @@
         "platform-support-confirmed"
       ],
       "provides": [
-        "vpn-negotiation-ready"
+        "vpn-keying-ready"
       ],
-      "trigger": "IPsec uses manual parameters or IKE negotiation between two peers.",
-      "applicability_boundary": "Algorithm support and command hierarchy vary by device/version; do not infer interoperability from vendor naming alone.",
+      "trigger": "A site-to-site IPsec policy uses either manually configured SA parameters or IKE negotiation between two peers.",
+      "applicability_boundary": "Do not combine manual and IKE keying in one policy scope. Confirm target device/version command hierarchy and algorithm support; do not infer the mode or suite from a reference example.",
       "file": "references/design-rules/wan-tunneling.md",
       "start_line": 80,
       "end_line": 93,
-      "content_sha256": "7b210dffc13953b2970fb282eaf4fa19f4410ce39ba7bb177885f0c4345f2d36"
+      "content_sha256": "a23d9c7787705a48d8c4ead6e1059365f970ddf83c96cf574104e25dd55edb05"
     },
     {
       "id": "DR-IPSEC-003",
@@ -525,7 +529,7 @@
       "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "vpn-selector-ready",
-        "vpn-negotiation-ready",
+        "vpn-keying-ready",
         "egress-route-resolved",
         "return-path-defined",
         "packet-processing-order-defined"
@@ -538,7 +542,7 @@
       "file": "references/design-rules/wan-tunneling.md",
       "start_line": 95,
       "end_line": 108,
-      "content_sha256": "b6e83960e6cebc9cdf08fad1c6a4c91ebf1963ef2a29370443eb73fc66b2c4d4"
+      "content_sha256": "0fd1be699658643af08099a3524d4a4c3380beca38e0c6768e56579e23434af1"
     },
     {
       "id": "DR-IPSEC-004",
@@ -676,15 +680,15 @@
         "layer2-transport-ready"
       ],
       "trigger": "Parallel Layer-2 links must be represented by one logical aggregation and remain usable after a member failure.",
-      "applicability_boundary": "Do not combine manual and LACP profiles in one final state, and do not claim active/standby selection or recovery until runtime member and endpoint evidence exists.",
+      "applicability_boundary": "Do not combine manual and LACP profiles in one final state. Configure `mode lacp-static` only when LACP negotiation is explicitly required and supported; do not claim active/standby selection or recovery until runtime member and endpoint evidence exists.",
       "file": "references/design-rules/campus-layer2.md",
       "start_line": 95,
       "end_line": 108,
-      "content_sha256": "32b562542e3fcddaac3cee4337e1a970ab8daacbccad586546a30525bfe8c3bd"
+      "content_sha256": "68c9f48f1b2d64969e6e6b85a50f5832de2a267e0dc39cc92ffc45d9e1a9a75c"
     },
     {
       "id": "DR-MCAST-001",
-      "title": "Separate multicast control plane, RPF, membership, and forwarding proof",
+      "title": "Separate multicast mode, RPF, membership, and forwarding proof",
       "status": "candidate",
       "catalog": "multicast.md",
       "catalog_state": "reserved",
@@ -692,11 +696,15 @@
         "multicast",
         "igmp",
         "pim",
+        "pim-sm",
+        "pim-dm",
         "rp",
+        "bsr",
+        "ssm",
         "rpf",
         "snooping"
       ],
-      "evidence_level": "candidate; extracted from AR chapter 9 examples and not independently runtime-validated in this project.",
+      "evidence_level": "candidate; extracted from AR chapter 9 examples and command hierarchy cross-checked against Huawei documentation, but not independently runtime-validated in this project.",
       "requires": [
         "platform-support-confirmed",
         "internal-routing-ready"
@@ -704,12 +712,12 @@
       "provides": [
         "multicast-service-ready"
       ],
-      "trigger": "A design must deliver multicast data to receivers through IGMP/PIM, a static/dynamic RP, or an IGMP Snooping policy.",
-      "applicability_boundary": "Candidate until platform capability, complete control-plane state, and controlled receiver/forwarding evidence are confirmed; a displayed IGMP/PIM state is not proof of video delivery.",
+      "trigger": "A design must deliver multicast data through PIM-DM, PIM-SM with a static or BSR-learned RP, PIM-SSM, or an IGMP Snooping policy.",
+      "applicability_boundary": "Candidate until platform capability, complete control-plane state, and controlled receiver/forwarding evidence are confirmed. Do not generate executable SM-ASM configuration while the RP method is unresolved, and do not infer delivery from displayed IGMP/PIM state.",
       "file": "references/design-rules/multicast.md",
       "start_line": 5,
       "end_line": 18,
-      "content_sha256": "f150a847cce9401d2470df213c1b0c4154c5ce11d7f29d1e449a0921ac4f61f5"
+      "content_sha256": "f47954c47edec2524402a775ae29c64283a9a06eb20c8447bd7a90ba3a90d07e"
     },
     {
       "id": "DR-MGMT-001",
@@ -1054,7 +1062,7 @@
       "file": "references/design-rules/resilience-oam.md",
       "start_line": 35,
       "end_line": 48,
-      "content_sha256": "3c4eddf1498fbb29e9b3e1bee549326a1ba517123901d3a2170b39fe3cfa4608"
+      "content_sha256": "e149b04643528a263061465ecc8649acc4b7fbfe0cfba632c425e284691d7624"
     },
     {
       "id": "DR-OSPF-001",
@@ -1280,7 +1288,7 @@
       "file": "references/design-rules/wan-tunneling.md",
       "start_line": 5,
       "end_line": 18,
-      "content_sha256": "5a7286867d867e625ddb7bc41d21f8a531663b1a83f2caafcb376bbbedc6c1a0"
+      "content_sha256": "862651bcb5767133e726e6860f48eea307996bb493b4f696c97309feaaf63fa1"
     },
     {
       "id": "DR-PPP-002",

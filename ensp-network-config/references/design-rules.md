@@ -31,6 +31,10 @@ Use this file to select design-rule catalogs. Rules are portable design constrai
 
 These routes are inactive. Do not ship a catalog file for a reserved route until it contains at least one evaluated rule. Do not load reserved routes in normal projects or list them under Active catalogs until at least one rule is `validated` and its portable evidence level is recorded in the catalog.
 
+Existing reserved catalog files use the listed basename under
+`references/design-rules/`. A listed route with no file remains an empty
+placeholder only.
+
 | Design domain | Inactive catalog | Intended scope |
 |---|---|---|
 | BGP | `bgp.md` | IPv4/IPv6 BGP, MP-BGP, RR, confederation, policy, RPKI |

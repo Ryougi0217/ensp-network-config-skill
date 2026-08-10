@@ -55,12 +55,12 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Provides: `layer2-isolation-ready`
 - Trigger: Multiple endpoint-facing VLANs must remain isolated while a parent or routed VLAN must cross an upstream Hybrid/Trunk boundary.
 - Design goal: Preserve the required child/subordinate isolation while carrying only the intended parent and routed VLAN semantics upstream.
-- Decision logic: Assign each endpoint-facing port the PVID for its own local domain; choose tagged/untagged membership from the required ingress/egress behavior; carry the parent/routed VLAN on the upstream path; configure the Layer-3 gateway only for the domains that must communicate.
-- Recompute parameters: Child and parent VLAN IDs, per-port PVID, tagged/untagged sets, upstream trunk VLANs, gateway subinterfaces or VLANIFs, and endpoint subnets.
-- Applicability boundary: Do not use when endpoints should share one ordinary access VLAN, when the platform does not support the required Hybrid semantics, or when isolation is enforced by an explicit security policy instead.
-- Common failure: Child ports share a PVID, the uplink leaks a child VLAN, untagged membership is omitted, or the gateway accidentally provides reachability that the requirement forbids.
-- Implementation order: Define VLAN roles; set endpoint PVIDs; set tagged/untagged behavior; establish the upstream transport; configure the gateway; verify positive inter-domain and negative child-isolation assertions.
-- Verification method: Check PVID and membership structure, verify the upstream VLAN set and gateway interfaces, then test both required reachability and required isolation.
+- Decision logic: Assign each endpoint-facing port its child-VLAN PVID and untagged membership in the parent plus that child. When the requirement explicitly selects parent/child fan-in, set the local fan-in uplink PVID to the parent and make the parent plus mapped children untagged there; place the peer-facing port in the parent VLAN; carry only the parent VLAN farther upstream; create the Layer-3 gateway only on the parent. Derive every port from the current topology.
+- Recompute parameters: Parent-to-child VLAN map, endpoint and fan-in ports, per-port PVID, tagged/untagged sets, conversion boundary, parent-only upstream transport, parent VLANIF/gateway, endpoint subnet, and isolation assertions.
+- Applicability boundary: Use parent/child fan-in only when child VLANs are local Layer-2 isolation domains that intentionally share one parent subnet and gateway. Do not treat it as a generic replacement for Trunk, MUX VLAN, Super-VLAN, or policy isolation; stop when platform Hybrid semantics or the bidirectional return behavior is unconfirmed.
+- Common failure: A child receives its own VLANIF, a child is carried beyond the conversion boundary, the fan-in or peer PVID is wrong, return traffic cannot reach the child-facing port, or the shared parent path leaks connectivity between children.
+- Implementation order: Define parent/child roles and the conversion boundary; configure child-facing Hybrid ports; configure the local fan-in Hybrid port; configure the peer as parent access and the upstream as parent-only transport; configure the parent gateway; then verify both directions and isolation.
+- Verification method: Inspect PVID and untagged membership at both sides of the conversion boundary, confirm that child VLANs remain local and only the parent reaches the gateway, then test gateway access, return traffic, same-parent child isolation, ARP, and representative unicast/broadcast behavior.
 
 ## DR-MUX-001: Model MUX VLAN roles as an explicit access policy
 - Status: candidate
@@ -100,9 +100,9 @@ Read these rules for Layer-2 forwarding, VLAN, and spanning-tree decisions. Matc
 - Provides: `aggregation-ready`, `layer2-transport-ready`
 - Trigger: Parallel Layer-2 links must be represented by one logical aggregation and remain usable after a member failure.
 - Design goal: Keep aggregation mode, member selection, active-link limits, and failure recovery as one explicit profile rather than merging alternative configurations.
-- Decision logic: Select manual or LACP mode from the requirement; remove any prior membership before changing mode; derive eligible members from the current parallel-link topology; set limits or priorities only when required; inspect the logical trunk and execute the requested member-failure test.
+- Decision logic: Select manual or LACP mode from the requirement. When the requirement names only Eth-Trunk and the target platform's manual default is confirmed, keep the manual profile and omit `mode lacp-static`; never infer LACP from an unrelated example. Remove prior membership before changing profiles; derive eligible members from the current parallel-link topology; set limits or priorities only when required; inspect the logical trunk and execute the requested member-failure test.
 - Recompute parameters: Aggregation mode, logical interface, physical members, VLAN transport, active-member limit, priorities, failure target, and recovery assertions.
-- Applicability boundary: Do not combine manual and LACP profiles in one final state, and do not claim active/standby selection or recovery until runtime member and endpoint evidence exists.
+- Applicability boundary: Do not combine manual and LACP profiles in one final state. Configure `mode lacp-static` only when LACP negotiation is explicitly required and supported; do not claim active/standby selection or recovery until runtime member and endpoint evidence exists.
 - Common failure: A member remains bound to a previous profile, the two ends disagree, a standby member is called active without state output, or failure recovery is inferred from configuration text.
 - Implementation order: Confirm parallel links; choose one profile; clear prior membership; configure the logical trunk and transport; inspect members; then execute and verify failure/recovery.
 - Verification method: Correlate logical trunk state, active/standby members, VLAN forwarding, endpoint reachability, and post-failure recovery.

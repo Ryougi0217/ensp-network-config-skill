@@ -19,18 +19,18 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 
 ## DR-ACL-002: Prove five-tuple permits together with an explicit negative destination
 - Status: validated
-- Tags: acl, advanced-acl, five-tuple, implicit-deny, negative-test
+- Tags: acl, advanced-acl, five-tuple, placement, direction, original-source, negative-test
 - Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `internal-routing-ready`
 - Provides: `authorization-policy-ready`
 - Trigger: An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.
 - Design goal: Distinguish the intended positive or denied tuple from the remaining traffic space and prove both sides of the policy.
-- Decision logic: Define protocol, source, destination, and any port constraints from the requirement; verify the permit rule; choose a reachable alternative destination or tuple for the negative test; inspect the ACL and test both results.
-- Recompute parameters: Protocol, source prefix, destination prefix, destination service, ACL context/direction, and negative assertion.
-- Applicability boundary: Until both positive and negative runtime outcomes are observed, treat an implicit deny as a policy expectation rather than evidence of an actual blocked session.
-- Common failure: A permitted destination is tested but the negative destination is omitted, or a test-label mismatch is treated as a second source without a literal command.
-- Implementation order: Establish route reachability; configure the exact tuple; verify context/direction; inspect policy; then execute positive and negative tests.
-- Verification method: Use route output, ACL state, and separate access results for the permitted and denied tuples.
+- Decision logic: Define the exact tuple, then trace both directions and choose the smallest physical or logical attachment set that sees the required packet identity before it changes. Ingress on a source-facing port, outbound on a shared uplink, or outbound near the protected destination may all be valid; choose by tuple visibility, bypass resistance, and clarity rather than copying an interface context. Avoid duplicate attachment when blocking one required direction already enforces the stated session boundary.
+- Recompute parameters: Protocol, source/destination prefixes and services, original and transformed packet identity, candidate attachment ports, ingress/outbound direction, alternate paths, rule order, and positive/negative assertions.
+- Applicability boundary: A project may require physical-port placement, but Vlanif or policy-context ACLs remain valid in other designs. A failed bidirectional Ping after blocking one direction proves only that reachability assertion, not comprehensive control of every protocol or reverse/new session.
+- Common failure: The ACL is bound where the original source is no longer visible, an alternate path bypasses the attachment, a broad rule is applied at too many points, or one failed Ping is treated as proof of the whole policy.
+- Implementation order: Establish routing; define the tuple; trace both directions and alternate paths; select the clearest non-bypassable attachment and direction; configure and inspect the policy; then execute positive and negative tests.
+- Verification method: Correlate route/path evidence, ACL counters, actual attachment/direction, and separate permitted/denied results for the exact tuples; include an alternate-path check when one exists.
 
 ## DR-DHCPSEC-001: Place DHCP trust only on the legitimate server path
 - Status: validated
