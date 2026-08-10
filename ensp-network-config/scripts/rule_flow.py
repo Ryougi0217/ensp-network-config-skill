@@ -156,6 +156,21 @@ def load_capability_contract() -> dict[str, Any]:
     names = [item.get("id") for item in capabilities if isinstance(item, dict)]
     if len(names) != len(set(names)) or any(not isinstance(name, str) for name in names):
         raise ValueError("rule-capabilities.json contains invalid or duplicate capability ids")
+    feature_states = contract.get("feature_states")
+    feature_basis = contract.get("feature_basis")
+    if not isinstance(feature_states, list) or not feature_states or any(
+        not isinstance(item, str) or not item for item in feature_states
+    ):
+        raise ValueError("rule-capabilities.json feature_states must be a non-empty string list")
+    if not isinstance(feature_basis, dict) or set(feature_basis) != set(feature_states):
+        raise ValueError("rule-capabilities.json feature_basis must define every feature state")
+    if any(
+        not isinstance(values, list)
+        or not values
+        or any(not isinstance(item, str) or not item for item in values)
+        for values in feature_basis.values()
+    ):
+        raise ValueError("rule-capabilities.json feature_basis values must be non-empty string lists")
     return contract
 
 
@@ -266,8 +281,12 @@ def validate_plan(
 ) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
-    if data.get("schema_version") != "1.0.0":
-        errors.append("schema_version must be '1.0.0'")
+    legacy_plan = "feature_profiles" not in data
+    if legacy_plan:
+        warnings.append(
+            "legacy project rule plan has no enforceable feature profiles; "
+            "complete the current plan structure before execution"
+        )
     if not re.fullmatch(r"v\d+", str(data.get("baseline_version") or "")):
         errors.append("baseline_version must use vN format")
     if data.get("mode") not in {"simple", "staged"}:
@@ -282,15 +301,99 @@ def validate_plan(
     requirements = list_of_dicts(data, "requirements", errors)
     choices = list_of_dicts(data, "choice_groups", errors)
     capabilities = list_of_dicts(data, "capabilities", errors)
+    feature_profiles = list_of_dicts(data, "feature_profiles", errors)
     instances = list_of_dicts(data, "instances", errors)
 
-    for key, items in (("requirements", requirements), ("choice_groups", choices), ("capabilities", capabilities), ("instances", instances)):
+    for key, items in (
+        ("requirements", requirements),
+        ("choice_groups", choices),
+        ("capabilities", capabilities),
+        ("feature_profiles", feature_profiles),
+        ("instances", instances),
+    ):
         duplicates = duplicate_values(items, "id")
         if duplicates:
             errors.append(f"duplicate {key} ids: {duplicates}")
 
     instance_by_id = {str(item.get("id")): item for item in instances if item.get("id")}
     capability_by_id = {str(item.get("id")): item for item in capabilities if item.get("id")}
+    profile_by_id = {str(item.get("id")): item for item in feature_profiles if item.get("id")}
+    requirement_ids = {str(item.get("id")) for item in requirements if item.get("id")}
+
+    allowed_feature_states = set(contract.get("feature_states", []))
+    feature_basis = {
+        state: set(values) for state, values in contract.get("feature_basis", {}).items()
+    }
+    unresolved_profiles: set[str] = set()
+    for profile in feature_profiles:
+        profile_id = profile.get("id")
+        protocol = profile.get("protocol")
+        scope_ref = profile.get("scope_ref")
+        if not isinstance(profile_id, str) or not profile_id:
+            errors.append("feature profile id must be a non-empty string")
+            continue
+        if not isinstance(protocol, str) or not protocol:
+            errors.append(f"{profile_id}: protocol must be a non-empty string")
+        if not isinstance(scope_ref, str) or not scope_ref:
+            errors.append(f"{profile_id}: scope_ref must be a non-empty string")
+
+        profile_requirement_refs = profile.get("requirement_refs", [])
+        if not isinstance(profile_requirement_refs, list) or not profile_requirement_refs:
+            errors.append(f"{profile_id}: requirement_refs must be a non-empty list")
+            profile_requirement_refs = []
+        elif any(not isinstance(item, str) or not item for item in profile_requirement_refs):
+            errors.append(f"{profile_id}: requirement_refs must contain non-empty strings")
+            profile_requirement_refs = []
+        unknown_requirements = sorted(set(profile_requirement_refs) - requirement_ids)
+        if unknown_requirements:
+            errors.append(f"{profile_id}: unknown requirement_refs {unknown_requirements}")
+
+        outcomes = profile.get("required_outcomes", [])
+        if not isinstance(outcomes, list) or not outcomes:
+            errors.append(f"{profile_id}: required_outcomes must be a non-empty list")
+        elif any(not isinstance(item, str) or not item for item in outcomes):
+            errors.append(f"{profile_id}: required_outcomes must contain non-empty strings")
+
+        features = profile.get("features", [])
+        if not isinstance(features, list) or not features:
+            errors.append(f"{profile_id}: features must be a non-empty list")
+            features = []
+        feature_names: list[str] = []
+        has_included_feature = False
+        for position, feature in enumerate(features):
+            if not isinstance(feature, dict):
+                errors.append(f"{profile_id}: features[{position}] must be an object")
+                continue
+            name = feature.get("name")
+            state = feature.get("state")
+            basis = feature.get("basis")
+            refs = feature.get("refs", [])
+            if not isinstance(name, str) or not name:
+                errors.append(f"{profile_id}: features[{position}].name must be a non-empty string")
+            else:
+                feature_names.append(name)
+            if state not in allowed_feature_states:
+                errors.append(f"{profile_id}/{name}: invalid feature state {state!r}")
+            elif basis not in feature_basis.get(str(state), set()):
+                errors.append(f"{profile_id}/{name}: invalid basis {basis!r} for state {state!r}")
+            if not isinstance(refs, list) or any(not isinstance(item, str) or not item for item in refs):
+                errors.append(f"{profile_id}/{name}: refs must be a list of non-empty strings")
+                refs = []
+            if state in {"required", "selected"}:
+                has_included_feature = True
+                if not refs:
+                    errors.append(f"{profile_id}/{name}: {state} feature requires trace refs")
+            if basis == "confirmed_requirement":
+                unknown_refs = sorted(set(refs) - requirement_ids)
+                if unknown_refs:
+                    errors.append(f"{profile_id}/{name}: unknown confirmed requirement refs {unknown_refs}")
+            if state == "needs_confirmation":
+                unresolved_profiles.add(profile_id)
+        duplicate_features = sorted({name for name in feature_names if feature_names.count(name) > 1})
+        if duplicate_features:
+            errors.append(f"{profile_id}: duplicate feature names {duplicate_features}")
+        if features and not has_included_feature:
+            errors.append(f"{profile_id}: at least one feature must be required or selected")
 
     for capability in capabilities:
         cap_id = capability.get("id")
@@ -341,6 +444,27 @@ def validate_plan(
         scope_refs = instance.get("scope_refs", [])
         if not isinstance(scope_refs, list) or not scope_refs:
             errors.append(f"{instance_id}: scope_refs must be a non-empty list")
+            scope_refs = []
+        profile_refs = instance.get("feature_profile_refs", [])
+        if not isinstance(profile_refs, list):
+            errors.append(f"{instance_id}: feature_profile_refs must be a list")
+            profile_refs = []
+        elif any(not isinstance(item, str) or not item for item in profile_refs):
+            errors.append(f"{instance_id}: feature_profile_refs must contain non-empty strings")
+            profile_refs = []
+        if not legacy_plan and application_state == "applied" and not profile_refs:
+            errors.append(f"{instance_id}: applied rule requires feature_profile_refs")
+        for profile_ref in profile_refs:
+            profile = profile_by_id.get(str(profile_ref))
+            if profile is None:
+                errors.append(f"{instance_id}: unknown feature profile {profile_ref}")
+                continue
+            if profile.get("scope_ref") not in scope_refs:
+                errors.append(
+                    f"{instance_id}: feature profile {profile_ref} scope {profile.get('scope_ref')!r} is not in scope_refs"
+                )
+            if application_state == "applied" and str(profile_ref) in unresolved_profiles:
+                errors.append(f"{instance_id}: feature profile {profile_ref} still needs confirmation")
         assertion_refs = instance.get("assertion_refs", [])
         if not isinstance(assertion_refs, list):
             errors.append(f"{instance_id}: assertion_refs must be a list")
@@ -423,6 +547,23 @@ def validate_plan(
     for cycle in detect_cycles(edges):
         errors.append("rule dependency cycle: " + " -> ".join(cycle))
 
+    referenced_profiles: set[str] = set()
+    for instance in instances:
+        profile_refs = instance.get("feature_profile_refs", [])
+        if isinstance(profile_refs, list):
+            referenced_profiles.update(str(profile_ref) for profile_ref in profile_refs)
+    unused_profiles = sorted(set(profile_by_id) - referenced_profiles)
+    if unused_profiles:
+        warnings.append(f"unreferenced feature profiles: {unused_profiles}")
+    if legacy_plan and enforce_stage is not None and any(
+        item.get("stage") == enforce_stage and item.get("application_state") == "applied"
+        for item in instances
+    ):
+        errors.append(
+            f"{enforce_stage}: legacy project rule plan cannot enter execution; "
+            "complete its feature profiles first"
+        )
+
     allowed_groups = contract.get("choice_groups", {})
     choice_keys: set[tuple[str, str, str]] = set()
     for choice in choices:
@@ -485,6 +626,7 @@ def validate_plan(
             "requirements": len(requirements),
             "choice_groups": len(choices),
             "capabilities": len(capabilities),
+            "feature_profiles": len(feature_profiles),
             "instances": len(instances),
         },
     }
@@ -515,19 +657,72 @@ def build_context(data: dict[str, Any], index: dict[str, Any], stage: str) -> st
     capability_by_id = {
         item["id"]: item for item in data.get("capabilities", []) if isinstance(item, dict) and item.get("id")
     }
+    profile_by_id = {
+        item["id"]: item for item in data.get("feature_profiles", []) if isinstance(item, dict) and item.get("id")
+    }
     used_capability_refs: list[str] = []
+    used_profile_refs: list[str] = []
+    stage_scope_refs: set[str] = set()
     for instance in stage_instances:
         used_capability_refs.extend(str(item) for item in instance.get("requires", {}).keys())
         used_capability_refs.extend(str(item) for item in instance.get("provides", []))
+        used_profile_refs.extend(str(item) for item in instance.get("feature_profile_refs", []))
+        stage_scope_refs.update(str(item) for item in instance.get("scope_refs", []))
+
+    stage_profiles = [profile_by_id[item] for item in dict.fromkeys(used_profile_refs) if item in profile_by_id]
+    requirement_refs = {
+        str(item) for profile in stage_profiles for item in profile.get("requirement_refs", [])
+    }
+    stage_instance_ids = {str(item.get("id")) for item in stage_instances}
+    stage_requirements = [
+        item
+        for item in data.get("requirements", [])
+        if isinstance(item, dict)
+        and (
+            str(item.get("id")) in requirement_refs
+            or str(item.get("handling")) in {f"rule:{instance_id}" for instance_id in stage_instance_ids}
+        )
+    ]
+    stage_choices = [
+        item
+        for item in data.get("choice_groups", [])
+        if isinstance(item, dict) and str(item.get("scope_ref")) in stage_scope_refs
+    ]
 
     lines = [
         f"# Rule context: {stage}",
         "",
         "Generated from the active rule plan. Read only this stage context; do not load unrelated catalogs.",
         "",
-        "## Capabilities",
+        "## Requirements",
         "",
     ]
+    if stage_requirements:
+        for requirement in stage_requirements:
+            lines.append(f"- `{requirement.get('id')}`: `{requirement.get('handling')}`")
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "## Choice groups", ""])
+    if stage_choices:
+        for choice in stage_choices:
+            lines.append(
+                f"- `{choice.get('id')}`: `{choice.get('group')}={choice.get('selected')}`; scope `{choice.get('scope_ref')}`; phase `{choice.get('phase')}`"
+            )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "## Feature profiles", ""])
+    for profile in stage_profiles:
+        lines.append(
+            f"- `{profile.get('id')}`: protocol `{profile.get('protocol')}`; scope `{profile.get('scope_ref')}`; outcomes {json.dumps(profile.get('required_outcomes', []), ensure_ascii=False)}"
+        )
+        for feature in profile.get("features", []):
+            lines.append(
+                f"  - `{feature.get('name')}`: `{feature.get('state')}` / `{feature.get('basis')}` / refs {json.dumps(feature.get('refs', []), ensure_ascii=False)}"
+            )
+
+    lines.extend(["", "## Capabilities", ""])
     for cap_ref in dict.fromkeys(used_capability_refs):
         capability = capability_by_id.get(cap_ref)
         if capability:

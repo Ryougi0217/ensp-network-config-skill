@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = "1.0.0"
+PROJECT_SCHEMA_VERSION = "1.0.0"
 STAGE_STATES = {
     "planned",
     "script_generated",
@@ -101,7 +101,7 @@ def yaml_scalar(value: Any) -> str:
 
 def render_stage_plan(project_dir: Path, data: dict[str, Any]) -> None:
     lines = [
-        f"schema_version: {yaml_scalar(SCHEMA_VERSION)}",
+        f"schema_version: {yaml_scalar(PROJECT_SCHEMA_VERSION)}",
         f"project_id: {yaml_scalar(data['project_id'])}",
         f"mode: {yaml_scalar(data['mode'])}",
         f"baseline_version: {yaml_scalar(data['baseline']['version'])}",
@@ -135,7 +135,7 @@ def create_project(path: Path, name: str, mode: str) -> Path:
     skeleton = SIMPLE_SKELETON if mode == "simple" else STAGED_SKELETON
     created_at = now()
     data: dict[str, Any] = {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": PROJECT_SCHEMA_VERSION,
         "project_id": project_id,
         "name": name,
         "mode": mode,
@@ -176,12 +176,12 @@ def create_project(path: Path, name: str, mode: str) -> Path:
         encoding="utf-8",
     )
     (project_dir / "planning" / "rule-plan-v0.yaml").write_text(
-        "schema_version: \"1.0.0\"\n"
         "baseline_version: \"v0\"\n"
         f"mode: {mode}\n"
         "requirements: []\n"
         "choice_groups: []\n"
         "capabilities: []\n"
+        "feature_profiles: []\n"
         "instances: []\n",
         encoding="utf-8",
     )
@@ -220,6 +220,11 @@ def validate_and_version_rule_plan(
         raise SystemExit(f"规则计划不存在: {source}")
 
     plan_data = load_document(source)
+    if "feature_profiles" not in plan_data:
+        raise SystemExit(
+            "项目规则计划缺少当前结构要求的 feature_profiles；"
+            "旧计划只能用于审计，不能确认新基线。"
+        )
     if plan_data.get("mode") != data.get("mode"):
         raise SystemExit(
             f"规则计划模式与项目不一致: plan={plan_data.get('mode')!r}, project={data.get('mode')!r}"

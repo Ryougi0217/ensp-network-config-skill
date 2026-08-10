@@ -33,11 +33,30 @@ Treat clear ports as observed. Propose a non-conflicting planned port only when 
 
 Obtain required behavior: reachability, isolation, redundancy, routing, services, and security policy. Propose missing non-conflicting values but preserve user-provided values.
 
+For every selected protocol, derive a requirement-driven feature profile before
+planning commands. Separate the required outcome, mandatory protocol and
+topology dependencies, explicitly requested optional features, and unrequested
+features. A complete protocol configuration means the smallest complete
+dependency chain that achieves the confirmed outcome, not every feature the
+protocol supports. Omit any optional feature that cannot be traced to a
+confirmed requirement, topology dependency, existing peer constraint, or
+target-platform necessity. For example, do not add OSPF authentication merely
+because it is available; add it only when the confirmed security requirement
+or peer configuration requires it.
+
+Persist these decisions in the rule plan's `feature_profiles`. Every applied
+rule instance must reference the matching profile. Do not enter a stage while
+one of its features is `needs_confirmation`; use the generated stage context so
+required, selected, and deliberately omitted features remain visible during
+command generation.
+
 For staged mode, persist complete planning data under `planning/` and show only a concise summary plus uncertainties in chat. Confirm the baseline once before generating the first stage. Treat baseline confirmation as authorization to begin.
 
 When the baseline changes, perform impact analysis and ask whether to rework. Do not silently invalidate prior results. If the user declines rework, either keep the old baseline active or record forced continuation with unresolved risk.
 
 Use [rule-flow.md](references/rule-flow.md) to build the project decision chain. Normalize requirements and topology into tags, hard protocol constraints, scope references, and required outcomes; query `references/rule-index.json` with `scripts/rule_flow.py` before loading rule bodies. Search active validated rules first. Search candidate or reserved rules only when validated coverage is missing, the user explicitly requires that protocol, or the user requests evaluation.
+
+Treat the Markdown catalogs under `references/design-rules/` as the only reusable rule source. A project rule plan references those rules by stable ID and records project-specific selection, scope, and evidence; it is not a versioned or external rule source. Never define or import an external rule body in a project plan.
 
 Persist the selected scoped instances, capability dependencies, requirement coverage, choice groups, and assertion references in `planning/rule-plan-vN.yaml`. Run `scripts/rule_flow.py validate` before baseline confirmation. Simple mode uses the same interface with a minimal plan. Candidate rules are advisory only and never alter the normal configuration chain.
 
@@ -53,7 +72,16 @@ Before working on a stage, run `scripts/rule_flow.py context` for that stage. Lo
 
 Read only the matching sections of [vrp-patterns.md](references/vrp-patterns.md) and follow the Stage TXT contract and static delivery gate in [project-workflow.md](references/project-workflow.md). Generate complete Huawei VRP command forms from the confirmed baseline; do not make an unproven template renderer a dependency. Write full scripts to versioned files and show only summaries and links in chat.
 
+Before emitting a protocol feature, trace it to a confirmed requirement or a
+mandatory dependency of the selected design. Remove convenience, hardening,
+tuning, authentication, encryption, redistribution, failure-detection, and
+other optional commands when that trace does not exist. If omitting an
+unrequested feature would materially conflict with a confirmed outcome, record
+the conflict for decision instead of silently enabling the feature.
+
 Run `scripts/validate_stage_script.py` before delivery. Automatically repair only mechanical representation errors. Ask before changing IPs, VLANs, ports, areas, Router IDs, next hops, policies, links, or any confirmed design value.
+
+Treat unresolved placeholders and unapproved command abbreviations as static errors. Reject `save` unconditionally. Treat reset, reboot or restart, delete, erase, remove, format, clear, rollback, and startup-configuration changes as sensitive commands. Do not create an authorization record merely to satisfy validation: accept one only after the user explicitly authorizes the exact command, device, section, and immutable stage-file hash. Keep authorized maintenance actions separate from normal configuration stages and never assemble them into the final configuration.
 
 ## 5. Apply the stage gate
 
@@ -61,7 +89,7 @@ Follow the runtime gate in [project-workflow.md](references/project-workflow.md)
 
 ## 6. Handle errors and rework
 
-Follow Failure, reset, and change handling in [project-workflow.md](references/project-workflow.md). Never generate command-level rollback or reset or clear a device automatically. Regenerate the smallest affected device set from persisted cumulative project state after the user performs any required reset.
+Follow Failure, reset, and change handling in [project-workflow.md](references/project-workflow.md). Never generate command-level rollback or reset or clear a device automatically. If the user explicitly requests a sensitive maintenance command, validate it against the exact authorization record and deliver it separately for manual execution. Regenerate the smallest affected device set from persisted cumulative project state after the user performs any required reset.
 
 ## 7. Complete and assemble
 

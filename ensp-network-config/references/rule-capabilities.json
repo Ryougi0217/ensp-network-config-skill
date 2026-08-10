@@ -1,5 +1,4 @@
 {
-  "schema_version": "1.0.0",
   "maturity_rank": {
     "planned": 0,
     "statically_ready": 1,
@@ -37,6 +36,37 @@
     "needs_confirmation",
     "platform_unsupported"
   ],
+  "feature_states": [
+    "required",
+    "selected",
+    "omitted",
+    "needs_confirmation"
+  ],
+  "feature_basis": {
+    "required": [
+      "confirmed_requirement",
+      "mandatory_dependency",
+      "approved_baseline",
+      "peer_constraint",
+      "platform_necessity"
+    ],
+    "selected": [
+      "confirmed_requirement",
+      "approved_baseline",
+      "peer_constraint",
+      "platform_necessity"
+    ],
+    "omitted": [
+      "not_requested",
+      "not_applicable",
+      "unsupported"
+    ],
+    "needs_confirmation": [
+      "ambiguous_requirement",
+      "material_conflict",
+      "missing_evidence"
+    ]
+  },
   "context_limits": {
     "max_rules_per_stage": 12,
     "max_catalogs_per_stage": 4,
@@ -46,6 +76,8 @@
     "aggregation-mode": ["manual", "lacp"],
     "dhcp-pool-mode": ["interface", "global"],
     "ppp-authentication": ["pap", "chap"],
+    "ipsec-keying-mode": ["manual", "ike"],
+    "pim-forwarding-profile": ["dm", "sm-static-rp", "sm-bsr", "sm-bsr-static-backup", "sm-ssm"],
     "wlan-forwarding": ["tunnel", "direct"],
     "nat-phase": ["static", "no-pat", "easy-ip", "server"],
     "gateway-method": ["vlanif", "router-subinterface"]
@@ -95,7 +127,7 @@
     {"id": "nat-transition-ready", "layer": "services"},
     {"id": "server-publication-ready", "layer": "services"},
     {"id": "vpn-selector-ready", "layer": "services"},
-    {"id": "vpn-negotiation-ready", "layer": "services"},
+    {"id": "vpn-keying-ready", "layer": "services"},
     {"id": "vpn-policy-ready", "layer": "services"},
     {"id": "vpn-validation-ready", "layer": "services"},
     {"id": "wireless-management-ready", "layer": "services"},

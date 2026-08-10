@@ -74,6 +74,7 @@ Build and confirm one baseline before configuration. Include:
 - Layer 2 and Layer 3 boundaries
 - routing areas and exit position
 - reachability, isolation, redundancy, service, and security requirements
+- per-protocol required outcomes, mandatory dependencies, explicitly requested options, and omitted unrequested options in `feature_profiles`
 - stage dependencies and safe parallel branches
 
 Use these interface rules:
@@ -87,7 +88,10 @@ Never generate commands for an unresolved used interface.
 
 Confirm the baseline once. Increment its version after an approved change. Do not repeat full tables in chat.
 
-Before confirmation, create `planning/rule-plan-v0.yaml` from [rule-flow.md](rule-flow.md), cover every confirmed requirement, and run:
+Before confirmation, create `planning/rule-plan-v0.yaml` using the current
+project-plan structure
+from [rule-flow.md](rule-flow.md), cover every confirmed requirement, link every
+applied instance to its feature profile, and run:
 
 ```powershell
 python scripts\rule_flow.py validate projects\PROJECT\planning\rule-plan-v0.yaml
@@ -170,6 +174,8 @@ Rules:
 - use full command forms unless the user explicitly requests abbreviations
 - generate incremental commands for this stage only
 - do not include `save`
+- do not leave unresolved placeholders such as `<interface-name>`, `${value}`, `{{ value }}`, `TODO`, or `TBD`
+- keep reset, reboot or restart, file deletion, format, clear, rollback, and startup-configuration changes out of normal stage files
 - do not include endpoint address planning in a stage file
 - keep explanations outside device command blocks
 - create a new `-vN.txt` version after change; never overwrite an executed or delivered version
@@ -187,7 +193,35 @@ Before delivery:
 5. check addressing, VLAN, trunk, gateway, routing, and policy consistency
 6. ensure the stage changes only its allowed scope
 7. check that prior passed-stage intent remains intact
-8. perform protocol semantic review
+8. trace every protocol feature to a confirmed requirement, existing-peer constraint, or mandatory dependency
+9. remove optional commands that have no such trace, including copied hardening or tuning examples
+10. perform protocol semantic review
+
+Run `validate_stage_script.py` without exceptions for a normal stage. Known abbreviations are errors unless the user explicitly requested them and the validator is run with `--allow-abbreviations`.
+
+Sensitive commands require a separate JSON authorization file and must not be mixed into a normal configuration stage. Use a separate maintenance TXT when the user explicitly asks for such an operation, and run:
+
+```text
+python scripts/validate_stage_script.py MAINTENANCE_TXT --authorization-file AUTHORIZATION_JSON
+```
+
+The authorization file binds the user's recorded decision to the exact stage bytes and exact commands:
+
+```json
+{
+  "stage_sha256": "sha256-of-the-maintenance-txt",
+  "authorization_ref": "project evidence reference for the explicit user decision",
+  "authorized_commands": [
+    {
+      "section": "CONFIG",
+      "device": "AR1",
+      "command": "reboot"
+    }
+  ]
+}
+```
+
+Every authorized entry must match one sensitive command exactly. A stale hash, an unused authorization, a broad command family, or a missing evidence reference is an error. `save` remains forbidden and cannot be authorized. Do not add an authorization file solely to make validation pass, and do not include maintenance TXT files in `99-全网最终完整配置.txt`.
 
 Automatically repair only mechanical issues such as representation, block ordering, or unambiguous command expansion. Ask before changing any confirmed network-design value.
 
@@ -235,7 +269,7 @@ On failure:
 3. let the user choose repair or forced continuation
 4. record explicit forced continuation as `forced_pass`
 
-Do not generate rollback scripts. For partial execution or rework, identify the smallest affected device set and ask whether the user wants to reset it. The user performs all reset and clearing operations. Rebuild the affected device from persisted cumulative stages.
+Do not generate rollback scripts. For partial execution or rework, identify the smallest affected device set and ask whether the user wants to reset it. The user performs all reset and clearing operations. If the user explicitly requests an auditable maintenance TXT, keep it outside the normal stage chain, bind every sensitive command to the exact authorization record described above, and deliver it only for manual execution. Rebuild the affected device from persisted cumulative stages.
 
 When the baseline changes:
 

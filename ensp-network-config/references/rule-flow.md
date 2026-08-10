@@ -2,6 +2,8 @@
 
 Use this workflow for multi-domain, redundant, or service-dependent projects. Keep simple projects on the same interface with a minimal rule plan.
 
+The reusable rules live only in `references/design-rules/*.md`. A project rule plan references their stable IDs and records project-specific selection, scope, dependencies, and evidence. It is a project artifact, not a versioned rule catalog, and it must not embed or import external rule definitions.
+
 ## Contents
 
 1. Interface
@@ -20,6 +22,7 @@ Build one project decision chain from confirmed business outcomes, topology fact
 The decision chain must state:
 
 - applied validated rules and their scoped instances
+- requirement-driven feature profiles and the applied instances that use them
 - capability dependencies and selected exclusive profiles
 - parameters that must be recomputed elsewhere in planning
 - assertion references and required evidence maturity
@@ -53,16 +56,29 @@ Apply this precedence when rules conflict:
 
 Select among several providers of one capability by explicit user constraint, existing network method, platform support, minimum sufficient complexity, verification/maintenance cost, then change size. Ask only when remaining choices materially change the design.
 
+For each applied protocol instance, derive the minimum sufficient feature set:
+
+1. the confirmed outcomes it must provide
+2. the base and dependency features required to provide those outcomes
+3. optional features explicitly required by the user, an approved baseline, or an existing peer
+4. supported but unrequested features that must remain omitted
+
+Protocol completeness means that items 1-3 form a working dependency chain;
+it does not mean enabling every supported feature. Do not introduce an
+optional feature as a copied example or generic best practice. If an omitted
+option creates a material conflict with a confirmed security, availability, or
+interoperability outcome, record `needs_confirmation` rather than silently
+adding it.
+
 Each rule declares controlled `Requires` and `Provides` tokens from [rule-capabilities.json](rule-capabilities.json). Do not use rule IDs as fixed dependencies. Instantiate a rule with scope references so the same rule can be applied independently to multiple VLANs, paths, or services.
 
 Use choice groups for mutually exclusive profiles. Select one value per group, scope, and phase. Keep sequential experiment phases separate.
 
 ## 4. Project rule plan
 
-Use this compact shape:
+Use this compact project-plan shape:
 
 ```yaml
-schema_version: "1.0.0"
 baseline_version: v1
 mode: staged
 requirements:
@@ -74,6 +90,21 @@ choice_groups:
     scope_ref: edge:branch-egress
     phase: final
     selected: easy-ip
+feature_profiles:
+  - id: feature:nat:branch-egress
+    protocol: nat
+    scope_ref: edge:branch-egress
+    requirement_refs: [req-internet]
+    required_outcomes: [private-sources-reach-public-network]
+    features:
+      - name: easy-ip-source-translation
+        state: required
+        basis: confirmed_requirement
+        refs: [req-internet]
+      - name: nat-server
+        state: omitted
+        basis: not_requested
+        refs: []
 capabilities:
   - id: cap:egress-route:branch
     name: egress-route-resolved
@@ -95,6 +126,7 @@ instances:
     application_state: applied
     validation_state: planned
     reason_code: trigger-matched
+    feature_profile_refs: [feature:nat:branch-egress]
     requires:
       cap:egress-route:branch: runtime_proven
     provides: [cap:nat:branch]
@@ -102,6 +134,13 @@ instances:
 ```
 
 Write skipped and duplicate decisions to `planning/rule-selection-log.jsonl`; do not keep them in the active plan. Every confirmed requirement must reference an instance or use one of `unruled`, `blocked`, `needs_confirmation`, or `platform_unsupported`.
+
+Each feature uses one state: `required`, `selected`, `omitted`, or
+`needs_confirmation`. Required and selected features need trace references;
+omitted features record why they are absent. An applied instance must reference
+at least one feature profile with a matching scope and cannot reference a
+profile that still needs confirmation. Plans without `feature_profiles` remain
+readable for audit, but must be completed before stage execution.
 
 ## 5. State and evidence
 
@@ -126,6 +165,11 @@ Default stage budgets are defined in `rule-capabilities.json`:
 - at most 3 candidate advisories
 
 Split an oversized stage by network layer or independent business/fault domain. Keep only the current rule plan, current stage context, compact upstream capability results, unresolved conflicts, and required evidence in active context. Never load source-learning reports or case corpora during normal configuration.
+
+The generated stage context carries only the current stage's requirements,
+choice-group selections, feature profiles, capabilities, instances, and rule
+bodies. Use the feature profile as the command-eligibility list: omitted
+features must not appear in the configuration.
 
 ## 7. Failure and rework
 
