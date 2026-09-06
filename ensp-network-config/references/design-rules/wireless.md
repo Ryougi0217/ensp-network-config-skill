@@ -3,9 +3,7 @@
 Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, VRP/eNSP support, forwarding mode, and runtime evidence before claiming deployment success.
 
 ## DR-WLAN-001: Separate management VLAN from client service VLANs
-- Status: validated
 - Tags: wlan, ac, ap, management-vlan, service-vlan
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `platform-support-confirmed`, `layer2-transport-ready`
 - Provides: `wireless-management-ready`
 - Trigger: An AC/AP WLAN must carry AP management/CAPWAP traffic and wireless user traffic.
@@ -18,9 +16,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 - Verification method: Check AP management state, VLAN transport, STA address/gateway, and service reachability as separate assertions.
 
 ## DR-WLAN-002: Separate AP registration from user association
-- Status: validated
 - Tags: wlan, capwap, ap-registration, sta, association
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `wireless-management-ready`
 - Provides: `wireless-client-plane-ready`
 - Trigger: A WLAN deployment reports that an AP is online or that a client can use an SSID.
@@ -33,9 +29,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 - Verification method: Record AP state, VAP/SSID state, STA association, IP/gateway, and business reachability separately.
 
 ## DR-WLAN-003: Keep the WLAN template reference chain complete
-- Status: validated
 - Tags: wlan, ssid, security-profile, vap, radio, ap-group
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `platform-support-confirmed`
 - Provides: `wireless-template-ready`
 - Trigger: An SSID is built from reusable AC WLAN templates.
@@ -48,9 +42,7 @@ Read these rules for Huawei AC/AP WLAN designs. Confirm the target AC/AP model, 
 - Verification method: Inspect each object and its reference, then test association and address assignment.
 
 ## DR-WLAN-004: Prove wired continuity for the selected forwarding mode
-- Status: validated
 - Tags: wlan, tunnel-forward, direct-forward, vlan, gateway, dhcp
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `wireless-management-ready`, `wireless-template-ready`, `layer2-transport-ready`, `address-service-ready`, `gateway-ready`
 - Provides: `wireless-service-ready`
 - Trigger: Wireless users must reach a wired gateway or external network.

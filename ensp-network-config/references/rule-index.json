@@ -1,15 +1,9 @@
 {
-  "schema_version": "1.0.0",
-  "source": "references/design-rules/*.md",
-  "catalog_index": "references/design-rules.md",
-  "capability_contract": "references/rule-capabilities.json",
   "rules": [
     {
       "id": "DR-ACL-001",
       "title": "Bind an ACL to the intended control-plane context and direction",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "acl",
         "vty",
@@ -17,7 +11,6 @@
         "direction",
         "rule-order"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "management-path-ready"
       ],
@@ -28,15 +21,13 @@
       "applicability_boundary": "An ACL object or static route to the device does not prove enforcement; require runtime permit/deny outcomes before claiming the access policy succeeded.",
       "file": "references/design-rules/security-access.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "60845bfcd788b5b575af2b0ef391c99d75a96153fdbfbe72985119b6e1a17e7c"
+      "end_line": 16,
+      "content_sha256": "c3e9c7a4197b5e995a28ca776cbb0e75c546e214a412a734c1b706bde7bd02b4"
     },
     {
       "id": "DR-ACL-002",
       "title": "Prove five-tuple permits together with an explicit negative destination",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "acl",
         "advanced-acl",
@@ -46,7 +37,6 @@
         "original-source",
         "negative-test"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "internal-routing-ready"
       ],
@@ -56,46 +46,14 @@
       "trigger": "An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.",
       "applicability_boundary": "A project may require physical-port placement, but Vlanif or policy-context ACLs remain valid in other designs. A failed bidirectional Ping after blocking one direction proves only that reachability assertion, not comprehensive control of every protocol or reverse/new session.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "c5ebbb4d6249fc4ce47f35ea13cc617c18be13a39a46351b4eee71a1e592f44e"
-    },
-    {
-      "id": "DR-BGP-001",
-      "title": "Separate BGP session, address-family, policy, and route-selection claims",
-      "status": "candidate",
-      "catalog": "bgp.md",
-      "catalog_state": "reserved",
-      "tags": [
-        "bgp",
-        "address-family",
-        "route-policy",
-        "next-hop",
-        "route-selection"
-      ],
-      "evidence_level": "candidate; extracted from AR chapter 8 examples and not independently runtime-validated in this project.",
-      "requires": [
-        "platform-support-confirmed",
-        "layer3-adjacency-ready",
-        "internal-routing-ready"
-      ],
-      "provides": [
-        "bgp-control-plane-ready",
-        "dynamic-routing-ready"
-      ],
-      "trigger": "A design uses BGP or MP-BGP and claims that a prefix is exchanged, preferred, or switched after a failure.",
-      "applicability_boundary": "Candidate until both peers' session/AF state, route policy effect, and controlled failure output are independently confirmed.",
-      "file": "references/design-rules/bgp.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "ba05b780a8eba1de39c39681d5347c5a4dda623ddffbbeb7d2d066861a760f94"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "a349864cc8032d14729e07b781ff24b89da8780433aaf808bd31a2dbad5a2fd3"
     },
     {
       "id": "DR-DHCP-001",
       "title": "Choose DHCP pool scope from the client attachment and verify the lease separately",
-      "status": "validated",
       "catalog": "ip-foundation-services.md",
-      "catalog_state": "active",
       "tags": [
         "dhcp",
         "address-pool",
@@ -103,7 +61,6 @@
         "global-pool",
         "lease"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "gateway-ready"
       ],
@@ -113,16 +70,14 @@
       "trigger": "A router must allocate addresses to clients on one or more directly attached LANs.",
       "applicability_boundary": "Do not claim successful allocation or options without current runtime lease evidence; static PC settings and an excluded address are source observations, not proof of DHCP behavior.",
       "file": "references/design-rules/ip-foundation-services.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "7596314ee7d1123131e05985b0a90502a9444f206bf6e7654e396719829da4f2"
+      "start_line": 5,
+      "end_line": 16,
+      "content_sha256": "395953139eee54d7cd19f14c990d711f6d2b12bb0fcbc1bf4d31a9583a20d50a"
     },
     {
       "id": "DR-DHCP-002",
       "title": "Treat global-pool and interface-pool DHCP as separate phases",
-      "status": "validated",
       "catalog": "ip-foundation-services.md",
-      "catalog_state": "active",
       "tags": [
         "dhcp",
         "global-pool",
@@ -130,7 +85,6 @@
         "phase-transition",
         "lease"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "gateway-ready"
       ],
@@ -140,45 +94,14 @@
       "trigger": "Source material demonstrates more than one DHCP allocation mode on the same VLANIF topology.",
       "applicability_boundary": "Do not claim lease provenance until cleanup/renewal and current lease evidence are available; source ipconfig output alone does not prove which phase issued the lease.",
       "file": "references/design-rules/ip-foundation-services.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "d534f1ce8de1833c5e6cc6303ea1cdd790e0195cbb0c55422b6f2d9684961d5d"
-    },
-    {
-      "id": "DR-DHCP-003",
-      "title": "Treat DHCP relay as a three-sided reachability and return-path contract",
-      "status": "candidate",
-      "catalog": "ip-foundation-services.md",
-      "catalog_state": "active",
-      "tags": [
-        "dhcp",
-        "relay",
-        "server-group",
-        "return-route",
-        "reachability"
-      ],
-      "evidence_level": "candidate; extracted from source examples, but not independently runtime-validated in this project.",
-      "requires": [
-        "layer3-adjacency-ready",
-        "internal-routing-ready",
-        "return-path-defined"
-      ],
-      "provides": [
-        "address-service-ready"
-      ],
-      "trigger": "DHCP clients and the DHCP server are on different subnets and a router or gateway relays the request.",
-      "applicability_boundary": "Candidate until the target platform's relay syntax and a clean relay/server/client runtime path are confirmed; a displayed relay configuration or source `ipconfig` output is not proof of relay operation.",
-      "file": "references/design-rules/ip-foundation-services.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "ab79fe119c3b0bdcefa8cbbbe8f1174787aed815aef84fb3563639c866cf7731"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "d305474545c42402793f3733ecb4cde67011f171efddaed3b71d25a11fc551d1"
     },
     {
       "id": "DR-DHCPSEC-001",
       "title": "Place DHCP trust only on the legitimate server path",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "dhcp-snooping",
         "rogue-dhcp",
@@ -186,7 +109,6 @@
         "vlan",
         "access-security"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "layer2-transport-ready",
         "address-service-ready"
@@ -197,16 +119,14 @@
       "trigger": "DHCP clients share a Layer-2 access domain where unauthorized DHCP replies must be blocked.",
       "applicability_boundary": "Confirm device and VRP/eNSP support and account for relays, stacked devices, and multiple legitimate server paths; never mark a broad user-facing segment trusted merely to make DHCP work.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "b29866c73ca955594d5ee804264d9afeb3c5367af7896232f5f53b8e73ae1604"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "855dcf955b575356d7e8045ef3e9972ee0526a2a8c8034e9d060f594b8025fdd"
     },
     {
       "id": "DR-FW-001",
       "title": "Assign firewall interfaces to zones before writing policy",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "firewall",
         "security-zone",
@@ -214,7 +134,6 @@
         "dmz",
         "untrust"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "interface-map-confirmed",
         "layer3-adjacency-ready"
@@ -225,16 +144,14 @@
       "trigger": "A firewall policy refers to trust, DMZ, untrust, or equivalent security zones.",
       "applicability_boundary": "Zone names and default inter-zone behavior vary by firewall model/version; do not infer policy effect from object existence.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "5c61a7f838af9043eefa6d83e3e40cc34bb4a637dbf54dcfc261dc68cc2f464f"
+      "start_line": 57,
+      "end_line": 68,
+      "content_sha256": "fee6f489198b85aa00b06ed2518ac10f4af231b2fbfe7d27509dcd1dd4313583"
     },
     {
       "id": "DR-FW-002",
       "title": "Express firewall policy direction and scope explicitly",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "firewall",
         "security-policy",
@@ -242,7 +159,6 @@
         "least-privilege",
         "service"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "firewall-zones-ready",
         "internal-routing-ready"
@@ -254,16 +170,14 @@
       "trigger": "A firewall must permit a specific inter-zone business flow.",
       "applicability_boundary": "Statefulness and default deny/permit behavior vary; confirm target firewall semantics before claiming reverse blocking.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 80,
-      "end_line": 93,
-      "content_sha256": "d2bbf1d3d2d772724df8a5f99140bbfe382ca3e233cda00538db9cd69533748f"
+      "start_line": 70,
+      "end_line": 81,
+      "content_sha256": "5237ad10f7cf36be6dea50a57b6a4baaba9efd5a8e349ef1f9291aafb1e4f004"
     },
     {
       "id": "DR-FW-003",
       "title": "Treat NAT as address transformation, not authorization",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "firewall",
         "nat",
@@ -271,7 +185,6 @@
         "source-nat",
         "server-publish"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "security-policy-ready",
         "egress-route-resolved",
@@ -283,16 +196,14 @@
       "trigger": "A firewall uses source NAT, PAT, or destination/server mapping.",
       "applicability_boundary": "A successful translation does not prove policy authorization or return-path correctness; platform processing order must be confirmed.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 95,
-      "end_line": 108,
-      "content_sha256": "d3b7ab5e4e4f255af01af5b8e384d0b52da384ef3876aae464ec1e9f71ccb82a"
+      "start_line": 83,
+      "end_line": 94,
+      "content_sha256": "0c78bc3c6cd860011640da56883aed11c03104990286ea7c261d4da1b41c89b4"
     },
     {
       "id": "DR-FW-004",
       "title": "Pair every allow rule with a deliberate deny test",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "firewall",
         "negative-test",
@@ -300,7 +211,6 @@
         "access-control",
         "verification"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "security-policy-ready"
       ],
@@ -310,44 +220,14 @@
       "trigger": "A firewall rule is described as successfully enforcing an access boundary.",
       "applicability_boundary": "A failed Ping can reflect routing/NAT/host issues; classify the layer before calling it a firewall deny.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 110,
-      "end_line": 123,
-      "content_sha256": "0de3ede379b843c663d18318515f0bfb96e51f6a5c8c211f4dda44acdece83dd"
-    },
-    {
-      "id": "DR-GW-001",
-      "title": "Align access VLAN transport with the selected Layer-3 gateway boundary",
-      "status": "deprecated",
-      "catalog": "gateway-edge.md",
-      "catalog_state": "active",
-      "tags": [
-        "gateway",
-        "inter-vlan",
-        "vlanif",
-        "router-on-a-stick",
-        "trunk"
-      ],
-      "evidence_level": "deprecated; superseded by DR-GW-002.",
-      "requires": [
-        "layer2-transport-ready",
-        "vlan-roles-defined"
-      ],
-      "provides": [
-        "gateway-ready"
-      ],
-      "trigger": "Multiple endpoint VLANs must reach one or more Layer-3 gateway interfaces through access and trunk transport.",
-      "applicability_boundary": "Candidate while endpoint settings and runtime gateway/cross-VLAN evidence are missing; do not assume a method script is a complete deployable configuration.",
-      "file": "references/design-rules/gateway-edge.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "d1cf4a3b0d031ce9477a698b51d9f41b49d9d958561be6639f0a427f5fc2aa14"
+      "start_line": 96,
+      "end_line": 107,
+      "content_sha256": "9d7cbbbc38e5b325696a03558b22389a3db6d6ecb0387aa1a79dbe2ac319e686"
     },
     {
       "id": "DR-GW-002",
       "title": "Gate inter-VLAN reachability on transport and gateway alignment",
-      "status": "validated",
       "catalog": "gateway-edge.md",
-      "catalog_state": "active",
       "tags": [
         "gateway",
         "inter-vlan",
@@ -355,7 +235,6 @@
         "trunk",
         "verification"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "layer2-transport-ready",
         "vlan-roles-defined"
@@ -366,16 +245,14 @@
       "trigger": "A staged experiment carries multiple VLANs from access ports over a trunk to VLANIF gateways.",
       "applicability_boundary": "Use this as a planning and verification guardrail; without a clean topology export or independent rerun, do not claim end-to-end runtime reproduction, and a successful ping does not prove every transport segment.",
       "file": "references/design-rules/gateway-edge.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "4db42d0dee60489980b977a4fbd6b900ed17824caeedee1e82c3daac334d2fa1"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "b8254456d3781d7146cbcf9b4272f9b622d209f54c4f7a6a1c336e465f24fabc"
     },
     {
       "id": "DR-GW-003",
       "title": "Separate VRRP role transitions from failure and recovery claims",
-      "status": "validated",
       "catalog": "gateway-edge.md",
-      "catalog_state": "active",
       "tags": [
         "vrrp",
         "gateway",
@@ -383,7 +260,6 @@
         "recovery",
         "verification"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "redundant-gateway-ready"
       ],
@@ -394,16 +270,14 @@
       "trigger": "A VRRP experiment changes priority or reports a new Master and also requires gateway failure/recovery.",
       "applicability_boundary": "Do not claim the named fault or recovery until both are executed; priority change alone cannot satisfy a physical-failure requirement.",
       "file": "references/design-rules/gateway-edge.md",
-      "start_line": 80,
-      "end_line": 93,
-      "content_sha256": "fc31ccd358abee556e96183cc94f0c28e183332edafa41f49efd7a14b25e3de9"
+      "start_line": 57,
+      "end_line": 68,
+      "content_sha256": "b157b7e8addb3920d2a67a4a827fe7569b3df183b94012d349c4391397091917"
     },
     {
       "id": "DR-HYBRID-001",
       "title": "Use Hybrid PVID and untagged membership to separate subordinate VLANs",
-      "status": "validated",
       "catalog": "campus-layer2.md",
-      "catalog_state": "active",
       "tags": [
         "vlan",
         "hybrid",
@@ -411,7 +285,6 @@
         "isolation",
         "inter-vlan"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "interface-map-confirmed",
         "vlan-roles-defined"
@@ -422,45 +295,14 @@
       "trigger": "Multiple endpoint-facing VLANs must remain isolated while a parent or routed VLAN must cross an upstream Hybrid/Trunk boundary.",
       "applicability_boundary": "Use parent/child fan-in only when child VLANs are local Layer-2 isolation domains that intentionally share one parent subnet and gateway. Do not treat it as a generic replacement for Trunk, MUX VLAN, Super-VLAN, or policy isolation; stop when platform Hybrid semantics or the bidirectional return behavior is unconfirmed.",
       "file": "references/design-rules/campus-layer2.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "97bee8f95c5681d21a8ac0633efbaedf82aab5f9080314061da41fc53b8f32d0"
-    },
-    {
-      "id": "DR-IP-001",
-      "title": "Separate Layer-3 adjacency, neighbor resolution, and endpoint reachability claims",
-      "status": "candidate",
-      "catalog": "ip-foundation-services.md",
-      "catalog_state": "active",
-      "tags": [
-        "ipv4",
-        "adjacency",
-        "arp",
-        "proxy-arp",
-        "reachability"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "interface-map-confirmed",
-        "topology-baseline-confirmed"
-      ],
-      "provides": [
-        "layer3-adjacency-ready",
-        "neighbor-resolution-ready"
-      ],
-      "trigger": "A design claims IPv4 reachability across a direct or routed interface, especially when ARP or Proxy ARP affects neighbor resolution.",
-      "applicability_boundary": "Keep this rule candidate until independent validation covers materially different IPv4 neighbor-resolution behavior; never infer Proxy ARP from static addressing alone.",
-      "file": "references/design-rules/ip-foundation-services.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "57478cc727fe54f6040b845bf778a1c087b190bed8a2acf84809dcd9a6a5e6a6"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "ef3aaf4a2d05487dc506438a834056411785868b286f368a456496d5d1a24653"
     },
     {
       "id": "DR-IPSEC-001",
       "title": "Match both ends of the IPsec traffic selector",
-      "status": "validated",
       "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
       "tags": [
         "ipsec",
         "selector",
@@ -468,7 +310,6 @@
         "site-to-site",
         "security-policy"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "internal-routing-ready",
         "return-path-defined"
@@ -479,16 +320,14 @@
       "trigger": "A site-to-site IPsec policy protects traffic between two private prefixes.",
       "applicability_boundary": "A matching ACL object alone does not prove an active SA or encrypted business flow; verify target platform selector semantics.",
       "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "9726cef8450ba442b5125541eebc9a57efa80898fab8f297952f72498fc49613"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "5506da1ee3c442fabe6bc2d6906e50a64d3cd14d6dfebd4da0e429377c5983ef"
     },
     {
       "id": "DR-IPSEC-002",
       "title": "Choose one IPsec keying mode and keep both peers symmetric",
-      "status": "validated",
       "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
       "tags": [
         "ipsec",
         "ike",
@@ -498,7 +337,6 @@
         "authentication",
         "algorithm"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "platform-support-confirmed"
       ],
@@ -508,16 +346,14 @@
       "trigger": "A site-to-site IPsec policy uses either manually configured SA parameters or IKE negotiation between two peers.",
       "applicability_boundary": "Do not combine manual and IKE keying in one policy scope. Confirm target device/version command hierarchy and algorithm support; do not infer the mode or suite from a reference example.",
       "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 80,
-      "end_line": 93,
-      "content_sha256": "a23d9c7787705a48d8c4ead6e1059365f970ddf83c96cf574104e25dd55edb05"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "ac85e46dc6b90c4ebdacdbc31d666e69ba87479512b534f62a83c00f7c479a2e"
     },
     {
       "id": "DR-IPSEC-003",
       "title": "Plan routing, NAT exemption, and tunnel policy as one dependency chain",
-      "status": "validated",
       "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
       "tags": [
         "ipsec",
         "nat",
@@ -526,7 +362,6 @@
         "exemption",
         "packet-processing-order"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "vpn-selector-ready",
         "vpn-keying-ready",
@@ -540,16 +375,14 @@
       "trigger": "IPsec and Internet access share an edge device with default routing or source NAT.",
       "applicability_boundary": "Processing order differs across platforms; confirm whether policy NAT, ACL NAT, and IPsec classification use the assumed order.",
       "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 95,
-      "end_line": 108,
-      "content_sha256": "0fd1be699658643af08099a3524d4a4c3380beca38e0c6768e56579e23434af1"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "0b1d001a11ba437350825c1fbc3a0169e6f545b0c42af49aade5f37c3f3b20ba"
     },
     {
       "id": "DR-IPSEC-004",
       "title": "Verify IPsec in layers rather than using one Ping",
-      "status": "validated",
       "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
       "tags": [
         "ipsec",
         "verification",
@@ -557,7 +390,6 @@
         "counters",
         "packet-capture"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "vpn-policy-ready"
       ],
@@ -567,16 +399,14 @@
       "trigger": "A configuration is being evaluated as an IPsec success.",
       "applicability_boundary": "A Ping can pass without using the intended tunnel, and an SA can exist without a usable return path; require the layer-specific evidence.",
       "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 110,
-      "end_line": 123,
-      "content_sha256": "76dd83a063dbb35fca544fecdadd5a42e9d2cc66c991a29b4a0c728df3f2e615"
+      "start_line": 57,
+      "end_line": 68,
+      "content_sha256": "a711990362d02d997b67be0aeecf37cdabc3eae189caef03ee1f2323705aa7e2"
     },
     {
       "id": "DR-IPSG-001",
       "title": "Enforce source identity only after the binding source is complete",
-      "status": "validated",
       "catalog": "security-access.md",
-      "catalog_state": "active",
       "tags": [
         "ipsg",
         "source-guard",
@@ -584,7 +414,6 @@
         "ip-mac-binding",
         "access-security"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "source-trust-ready"
       ],
@@ -594,46 +423,14 @@
       "trigger": "Access ports must reject hosts whose source IP/MAC/VLAN/interface identity does not match the authorized assignment.",
       "applicability_boundary": "Confirm platform support and binding completeness before enforcement; dynamic IPSG depends on correct DHCP Snooping, and incomplete bindings can deny valid traffic.",
       "file": "references/design-rules/security-access.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "60425425e79f18675df5c32a2af5ee6534b5970e27020d16c37d1f9e19f800a3"
-    },
-    {
-      "id": "DR-ISIS-001",
-      "title": "Align NET, level, area, and interface enablement before route claims",
-      "status": "candidate",
-      "catalog": "isis.md",
-      "catalog_state": "reserved",
-      "tags": [
-        "isis",
-        "net",
-        "level",
-        "area",
-        "adjacency",
-        "route-learning"
-      ],
-      "evidence_level": "candidate; extracted from AR chapter 8 examples and not independently runtime-validated in this project.",
-      "requires": [
-        "platform-support-confirmed",
-        "layer3-adjacency-ready"
-      ],
-      "provides": [
-        "isis-control-plane-ready",
-        "dynamic-routing-ready"
-      ],
-      "trigger": "A design uses IS-IS or IS-IS for IPv6 and claims adjacency or learned routes.",
-      "applicability_boundary": "Candidate until complete neighbor state and route-learning evidence exist for all required participants; a configuration excerpt is not convergence proof.",
-      "file": "references/design-rules/isis.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "43da2bdfc802b4e14dced205082f4290cb60b5d7b27843b2a3e8a85efa614c5c"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "6e3f1b2933e50b8e357cef872b36cafb43affa8559fa142d37cd5bd325e74b8b"
     },
     {
       "id": "DR-L2-001",
       "title": "Define access VLAN roles and trunk transport before spanning-tree selection",
-      "status": "validated",
       "catalog": "campus-layer2.md",
-      "catalog_state": "active",
       "tags": [
         "vlan",
         "access",
@@ -642,7 +439,6 @@
         "mstp",
         "layer2"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "interface-map-confirmed",
         "vlan-roles-defined"
@@ -653,16 +449,14 @@
       "trigger": "Endpoints in one or more VLANs must cross multiple switches or redundant Layer-2 links.",
       "applicability_boundary": "Reassess when routing separates the domains, when a VLAN is intentionally local, or when a link is not part of the Layer-2 forwarding path.",
       "file": "references/design-rules/campus-layer2.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "2665d1a9f7bd591f3106cd6d16a6cb9f25a9412b48f518e918f071e342de55c5"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "04f6b47d52660fd046c293a0ff47234145e8df6a4a647793fc6bce6cf1bcf264"
     },
     {
       "id": "DR-LACP-001",
       "title": "Choose one aggregation profile and prove member-state recovery",
-      "status": "validated",
       "catalog": "campus-layer2.md",
-      "catalog_state": "active",
       "tags": [
         "eth-trunk",
         "lacp",
@@ -670,7 +464,6 @@
         "failure",
         "vlan"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "interface-map-confirmed",
         "parallel-links-confirmed"
@@ -682,117 +475,19 @@
       "trigger": "Parallel Layer-2 links must be represented by one logical aggregation and remain usable after a member failure.",
       "applicability_boundary": "Do not combine manual and LACP profiles in one final state. Configure `mode lacp-static` only when LACP negotiation is explicitly required and supported; do not claim active/standby selection or recovery until runtime member and endpoint evidence exists.",
       "file": "references/design-rules/campus-layer2.md",
-      "start_line": 95,
-      "end_line": 108,
-      "content_sha256": "68c9f48f1b2d64969e6e6b85a50f5832de2a267e0dc39cc92ffc45d9e1a9a75c"
-    },
-    {
-      "id": "DR-MCAST-001",
-      "title": "Separate multicast mode, RPF, membership, and forwarding proof",
-      "status": "candidate",
-      "catalog": "multicast.md",
-      "catalog_state": "reserved",
-      "tags": [
-        "multicast",
-        "igmp",
-        "pim",
-        "pim-sm",
-        "pim-dm",
-        "rp",
-        "bsr",
-        "ssm",
-        "rpf",
-        "snooping"
-      ],
-      "evidence_level": "candidate; extracted from AR chapter 9 examples and command hierarchy cross-checked against Huawei documentation, but not independently runtime-validated in this project.",
-      "requires": [
-        "platform-support-confirmed",
-        "internal-routing-ready"
-      ],
-      "provides": [
-        "multicast-service-ready"
-      ],
-      "trigger": "A design must deliver multicast data through PIM-DM, PIM-SM with a static or BSR-learned RP, PIM-SSM, or an IGMP Snooping policy.",
-      "applicability_boundary": "Candidate until platform capability, complete control-plane state, and controlled receiver/forwarding evidence are confirmed. Do not generate executable SM-ASM configuration while the RP method is unresolved, and do not infer delivery from displayed IGMP/PIM state.",
-      "file": "references/design-rules/multicast.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "f47954c47edec2524402a775ae29c64283a9a06eb20c8447bd7a90ba3a90d07e"
-    },
-    {
-      "id": "DR-MGMT-001",
-      "title": "Keep management transport, AAA, and source restriction as separate gates",
-      "status": "candidate",
-      "catalog": "security-access.md",
-      "catalog_state": "active",
-      "tags": [
-        "management-access",
-        "ssh",
-        "stelnet",
-        "telnet",
-        "radius",
-        "hwtacacs",
-        "vty",
-        "acl"
-      ],
-      "evidence_level": "candidate; source-derived from AR management examples and not independently runtime-validated in this project.",
-      "requires": [
-        "management-path-ready",
-        "platform-support-confirmed"
-      ],
-      "provides": [
-        "management-access-ready"
-      ],
-      "trigger": "A device management requirement combines SSH/STelnet or legacy Telnet with local, RADIUS, or HWTACACS authentication and a source restriction.",
-      "applicability_boundary": "Candidate until target VRP version, AAA server reachability, key size, transport syntax, and both positive/negative login outcomes are confirmed; credentials in the source are fixed examples and must never be copied.",
-      "file": "references/design-rules/security-access.md",
-      "start_line": 125,
-      "end_line": 138,
-      "content_sha256": "fa131ae6ce14262dddd7f91e4bf7ce0814635b4f6ec50ec48e05731bd98d6822"
-    },
-    {
-      "id": "DR-MPLS-001",
-      "title": "Keep underlay, LSR identity, label session, service, and protection claims separate",
-      "status": "candidate",
-      "catalog": "mpls-vpn.md",
-      "catalog_state": "reserved",
-      "tags": [
-        "mpls",
-        "ldp",
-        "lsp",
-        "vpn",
-        "te",
-        "frr",
-        "underlay"
-      ],
-      "evidence_level": "candidate; extracted from AR chapters 6 and 10 and not independently runtime-validated in this project.",
-      "requires": [
-        "platform-support-confirmed",
-        "dynamic-routing-ready"
-      ],
-      "provides": [
-        "mpls-core-ready",
-        "mpls-service-ready"
-      ],
-      "trigger": "A design uses LDP/static LSP/MPLS TE or carries a VPN service through an MPLS core.",
-      "applicability_boundary": "Candidate because the source explicitly excludes several AR models and the examples depend on high-end platforms; no MPLS capability should be inferred for eNSP without target support evidence.",
-      "file": "references/design-rules/mpls-vpn.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "e75070c62df022d6257cea9e5670c3851fc78ef51674cabe64380db3c20dffbd"
+      "start_line": 57,
+      "end_line": 68,
+      "content_sha256": "cd70064bc6ef3da42af38f901a62f3469efc6f1abe4fdbf86cc105e9b6bde326"
     },
     {
       "id": "DR-MSTP-VRRP-001",
       "title": "Group MSTP instances by business forwarding intent",
-      "status": "validated",
       "catalog": "campus-layer2.md",
-      "catalog_state": "active",
       "tags": [
         "mstp",
         "vlan",
         "load-sharing"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "layer2-transport-ready",
         "loop-domain-defined"
@@ -804,49 +499,19 @@
       "applicability_boundary": "Ignore this rule when there is no Layer-2 loop or no requirement for distinct forwarding behavior.",
       "file": "references/design-rules/campus-layer2.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "e9eea3a2f459c4f54a653e24f22bc851fa897cf9b89bbc1c6760bd3977b72cdc"
-    },
-    {
-      "id": "DR-MSTP-VRRP-002",
-      "title": "Align the Layer-2 root with the same-VLAN VRRP master",
-      "status": "candidate",
-      "catalog": "resilience-oam.md",
-      "catalog_state": "active",
-      "tags": [
-        "mstp",
-        "vrrp",
-        "vlan",
-        "redundancy"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "layer2-path-plan-ready",
-        "redundant-gateway-ready"
-      ],
-      "provides": [
-        "redundancy-coordination-ready"
-      ],
-      "trigger": "A VLAN is carried across redundant gateway switches, both have an SVI/VRRP group, and the requirement asks to avoid unnecessary Layer-2 hairpinning.",
-      "applicability_boundary": "Ignore when there is no redundant gateway or when MSTP cannot influence the gateway path; upstream failure may still require tracking or routing convergence.",
-      "file": "references/design-rules/resilience-oam.md",
-      "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "f3ceeb83ab2add8aefa956e08c9ee75e528e6f0a52da7f27618ec919930c0bb2"
+      "end_line": 16,
+      "content_sha256": "69c09aefc30827f195660e0bb2c95219a86ecd2e926f328117b5cb1da94ac879"
     },
     {
       "id": "DR-MSTP-VRRP-003",
       "title": "Treat MST region identity as a domain-wide invariant",
-      "status": "validated",
       "catalog": "campus-layer2.md",
-      "catalog_state": "active",
       "tags": [
         "mstp",
         "region",
         "vlan",
         "consistency"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "vlan-roles-defined",
         "loop-domain-defined"
@@ -857,23 +522,20 @@
       "trigger": "Two or more switches participate in the same MSTP region.",
       "applicability_boundary": "Ignore when MSTP is not used or when the device is intentionally outside the region.",
       "file": "references/design-rules/campus-layer2.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "459ba83bd192aec5d50adebad277c17c2407b8d7261550c07ff5461b7afd2a01"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "d681202332d4ff8e49dc9e8ad00244dc1d47b4ab038feec8d84aa5ee1a3b25db"
     },
     {
       "id": "DR-MSTP-VRRP-004",
       "title": "Derive a VRRP tuple independently for each VLAN",
-      "status": "validated",
       "catalog": "gateway-edge.md",
-      "catalog_state": "active",
       "tags": [
         "vrrp",
         "vlan",
         "gateway",
         "addressing"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "gateway-ready"
       ],
@@ -884,70 +546,13 @@
       "applicability_boundary": "Ignore when there is only one gateway or VRRP is not part of the requirement; do not treat priority alone as upstream-path health.",
       "file": "references/design-rules/gateway-edge.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "9c2aea6ed3138993d8849796e0b8590c72f618b16e466d08c01f787e771179de"
-    },
-    {
-      "id": "DR-MSTP-VRRP-005",
-      "title": "Verify redundancy against the stated fault model",
-      "status": "deprecated",
-      "catalog": "resilience-oam.md",
-      "catalog_state": "active",
-      "tags": [
-        "mstp",
-        "vrrp",
-        "failure",
-        "verification"
-      ],
-      "evidence_level": "deprecated; generic fault-model behavior is owned by verification-rules.md.",
-      "requires": [
-        "topology-baseline-confirmed"
-      ],
-      "provides": [
-        "fault-test-plan-ready",
-        "recovery-test-plan-ready"
-      ],
-      "trigger": "The requirement names link failure, gateway/core failure, recovery, or convergence behavior.",
-      "applicability_boundary": "If runtime execution is unavailable, record an unverified/static result; never upgrade it to operational success.",
-      "file": "references/design-rules/resilience-oam.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "2f3f8278b8b340deabf72686549ac8eb8959cd5cf99229242ed92600a72286c3"
-    },
-    {
-      "id": "DR-MUX-001",
-      "title": "Model MUX VLAN roles as an explicit access policy",
-      "status": "candidate",
-      "catalog": "campus-layer2.md",
-      "catalog_state": "active",
-      "tags": [
-        "mux-vlan",
-        "principal",
-        "group",
-        "separate",
-        "isolation"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "interface-map-confirmed",
-        "vlan-roles-defined"
-      ],
-      "provides": [
-        "layer2-isolation-ready"
-      ],
-      "trigger": "A Layer-2 design requires a principal service endpoint, group-member communication, and separate-member isolation in one broadcast domain.",
-      "applicability_boundary": "Do not infer MUX semantics from a title alone; stop when the platform support or the principal/group behavior is unclear.",
-      "file": "references/design-rules/campus-layer2.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "61b66f513988a072687b0cd01ae723d536ce5fb9afd9d9500640ef8f59beadb8"
+      "end_line": 16,
+      "content_sha256": "57ca4ebc69cc63c1fe273ab49ed77e1946d5e204a5d30115775654378afc5d91"
     },
     {
       "id": "DR-NAT-001",
       "title": "Bind Easy-IP source scope to the resolved egress path",
-      "status": "validated",
       "catalog": "gateway-edge.md",
-      "catalog_state": "active",
       "tags": [
         "nat",
         "easy-ip",
@@ -955,7 +560,6 @@
         "default-route",
         "gateway"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "internal-routing-ready",
         "egress-route-resolved",
@@ -967,16 +571,14 @@
       "trigger": "An edge router must translate selected private source networks toward a public or provider-facing path.",
       "applicability_boundary": "Reassess when there are multiple exits, policy-based routing, stateful security policies, static NAT requirements, or when the platform's Easy-IP behavior is unconfirmed.",
       "file": "references/design-rules/gateway-edge.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "1df3069d2d94ac252e4b64da370d7dcc0938ba03c925b94bf140cd68652ca6f7"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "1a93788dd8f784ef0bc49af79f61dfe90836dcb8eda91c16778c6dcc62a6938a"
     },
     {
       "id": "DR-NAT-002",
       "title": "Treat multi-mode NAT exercises as ordered transitions with per-phase proof",
-      "status": "validated",
       "catalog": "gateway-edge.md",
-      "catalog_state": "active",
       "tags": [
         "nat",
         "static-nat",
@@ -985,7 +587,6 @@
         "nat-server",
         "phase-transition"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "egress-route-resolved",
         "return-path-defined"
@@ -996,49 +597,14 @@
       "trigger": "A source material demonstrates static NAT, address-group no-PAT, Easy-IP, or NAT Server in sequential phases.",
       "applicability_boundary": "Do not claim all phases are simultaneously active or operationally successful until each required phase has separate runtime translation and reachability evidence.",
       "file": "references/design-rules/gateway-edge.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "8394ec533cdf153ae58561a12f525acb9e3eb6ce92b71a55720efdf0942978a7"
-    },
-    {
-      "id": "DR-NAT-003",
-      "title": "Separate server publication, hairpin access, ALG, and outbound translation claims",
-      "status": "candidate",
-      "catalog": "gateway-edge.md",
-      "catalog_state": "active",
-      "tags": [
-        "nat",
-        "nat-server",
-        "hairpin",
-        "dns-map",
-        "alg",
-        "pbr",
-        "dual-exit",
-        "packet-processing-order"
-      ],
-      "evidence_level": "candidate; source-derived from sequential examples and not independently runtime-validated in this project.",
-      "requires": [
-        "egress-route-resolved",
-        "return-path-defined",
-        "authorization-policy-ready",
-        "packet-processing-order-defined"
-      ],
-      "provides": [
-        "server-publication-ready"
-      ],
-      "trigger": "A multi-exit edge must publish an internal service while also supporting inside access, DNS mapping, ALG, or general outbound NAT.",
-      "applicability_boundary": "Candidate until target-platform processing order, hairpin behavior, ALG support, and runtime translation/session evidence are independently confirmed; a source NAT table or successful Ping does not prove service publication.",
-      "file": "references/design-rules/gateway-edge.md",
-      "start_line": 95,
-      "end_line": 108,
-      "content_sha256": "da9513bd4b052e95e211efb47357f44d8df337a7ae18fee26350b931c24071b5"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "21e03b8567e4a2dc8e129a420468e59e85f8b22a91f03afdeca2d4ed85e286e4"
     },
     {
       "id": "DR-OAM-001",
       "title": "Require a three-state proof for liveness-tracked routes",
-      "status": "validated",
       "catalog": "resilience-oam.md",
-      "catalog_state": "active",
       "tags": [
         "bfd",
         "nqa",
@@ -1047,7 +613,6 @@
         "failure",
         "recovery"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "layer3-adjacency-ready",
         "internal-routing-ready"
@@ -1060,16 +625,14 @@
       "trigger": "A route or gateway decision is attached to BFD/NQA liveness.",
       "applicability_boundary": "Confirm target VRP/simulator support before generating executable commands, and do not claim recovery without post-restore evidence; a successful NQA sample alone is not a service-level objective.",
       "file": "references/design-rules/resilience-oam.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "e149b04643528a263061465ecc8649acc4b7fbfe0cfba632c425e284691d7624"
+      "start_line": 5,
+      "end_line": 16,
+      "content_sha256": "112b8daba0116d79283a545de0b699f1234a9f2a6b09db9db1520b51f8a55037"
     },
     {
       "id": "DR-OSPF-001",
       "title": "Build multi-area OSPF around explicit backbone and ABR continuity",
-      "status": "validated",
       "catalog": "ospf.md",
-      "catalog_state": "active",
       "tags": [
         "ospf",
         "multiarea",
@@ -1077,7 +640,6 @@
         "router-id",
         "routing"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "layer3-adjacency-ready",
         "topology-baseline-confirmed"
@@ -1090,42 +652,13 @@
       "applicability_boundary": "Reassess when the topology has no multi-area requirement, when an area is intentionally disconnected from the backbone, or when the target platform's OSPF/special-area support is unconfirmed.",
       "file": "references/design-rules/ospf.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "ab770a85d48820ad957a7b46566d988c40bf279fa5a86495cf163f7c0b874a53"
-    },
-    {
-      "id": "DR-OSPF-002",
-      "title": "Apply special-area behavior consistently to all members of the area",
-      "status": "candidate",
-      "catalog": "ospf.md",
-      "catalog_state": "active",
-      "tags": [
-        "ospf",
-        "nssa",
-        "stub",
-        "totally-stub",
-        "area-policy"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "dynamic-routing-ready"
-      ],
-      "provides": [
-        "route-policy-ready"
-      ],
-      "trigger": "The requirement explicitly asks for NSSA, stub, totally stub, summary suppression, or a comparable special-area behavior.",
-      "applicability_boundary": "Do not use when the requirement does not specify route suppression or external-route behavior, or when platform support for the selected special-area type is unclear.",
-      "file": "references/design-rules/ospf.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "dd4b529a0f7c2e18736b4bb136498f00d5d97ff7d30e7b86aba44ed5c44014ec"
+      "end_line": 16,
+      "content_sha256": "253a3acd502cc9a9033f41fa46f0ab1c026b7f4b19486a18ead8927e973c4a8d"
     },
     {
       "id": "DR-OSPF-003",
       "title": "Keep single-area adjacency, route learning, and reachability separate",
-      "status": "validated",
       "catalog": "ospf.md",
-      "catalog_state": "active",
       "tags": [
         "ospf",
         "single-area",
@@ -1133,7 +666,6 @@
         "route-learning",
         "verification"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "layer3-adjacency-ready"
       ],
@@ -1144,56 +676,20 @@
       "trigger": "A single-area OSPF design claims that internal VLAN or loopback prefixes are reachable through a transit link.",
       "applicability_boundary": "When the source scope is incomplete or runtime adjacency/route evidence is not independently reproduced, keep the result explicitly unverified and do not extend it beyond the observed device and phase.",
       "file": "references/design-rules/ospf.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "4a08dd9efbd1290e41118f53cd16669c4156c62a38a016311345b2f34a6a664f"
-    },
-    {
-      "id": "DR-PBR-001",
-      "title": "Order specific policy-route exceptions before generic redirects",
-      "status": "candidate",
-      "catalog": "routing-policy.md",
-      "catalog_state": "active",
-      "tags": [
-        "pbr",
-        "multi-exit",
-        "classifier",
-        "behavior",
-        "traffic-policy",
-        "redirect",
-        "precedence",
-        "packet-processing-order"
-      ],
-      "evidence_level": "candidate; source-derived from S V600 and AR examples, without an independent runtime run in this project.",
-      "requires": [
-        "internal-routing-ready",
-        "egress-route-resolved",
-        "packet-processing-order-defined",
-        "packet-identity-visible"
-      ],
-      "provides": [
-        "policy-routing-ready"
-      ],
-      "trigger": "Policy-based routing sends selected traffic to an exit or next hop while an exception must preserve an internal, published-service, or source-specific path.",
-      "applicability_boundary": "Candidate until platform precedence and applied-record output are confirmed; a policy object or one successful trace does not prove that a more-specific exception wins.",
-      "file": "references/design-rules/routing-policy.md",
-      "start_line": 80,
-      "end_line": 93,
-      "content_sha256": "d80560368fb019b89357342fe13ef0078ae9b84eb385edb79e9e138babe63b79"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "2f3edd75852bd18cddd1829583925aeb800ffa7dc995ec352f6caeebeed8df75"
     },
     {
       "id": "DR-PLAT-001",
       "title": "Confirm PoE hardware capability before port configuration",
-      "status": "validated",
       "catalog": "platform-infrastructure.md",
-      "catalog_state": "active",
       "tags": [
         "poe",
         "hardware",
         "power",
         "platform-support"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "hardware-inventory-confirmed",
         "platform-support-confirmed"
@@ -1205,22 +701,19 @@
       "applicability_boundary": "Recheck every target model, module combination, and VRP/eNSP version; this rule does not establish that a particular simulator image supports PoE.",
       "file": "references/design-rules/platform-infrastructure.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "ca0db87af5f99df0f2595cee7cdd3a613887da0b2120c672af5cd8b54316d031"
+      "end_line": 16,
+      "content_sha256": "0dd1357c89ed0b52447e9a101a90b9848dafa2fc7d53ee2b125eb5aa78c05f1f"
     },
     {
       "id": "DR-PLAT-002",
       "title": "Allocate limited PoE power by business criticality",
-      "status": "validated",
       "catalog": "platform-infrastructure.md",
-      "catalog_state": "active",
       "tags": [
         "poe",
         "power-budget",
         "priority",
         "availability"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "poe-capability-confirmed"
       ],
@@ -1230,43 +723,14 @@
       "trigger": "Sum of endpoint demand may exceed the usable PoE budget.",
       "applicability_boundary": "Priority semantics and overload behavior are device/version dependent; do not claim graceful shedding without a controlled platform test.",
       "file": "references/design-rules/platform-infrastructure.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "13d2c6f3ba08806774638e502a73c26c18955de5ba6e6e9cac4171d1453cb2dd"
-    },
-    {
-      "id": "DR-POLICY-001",
-      "title": "Treat a route-filter object as inactive until attachment and effect are proven",
-      "status": "candidate",
-      "catalog": "routing-policy.md",
-      "catalog_state": "active",
-      "tags": [
-        "rip",
-        "route-filter",
-        "acl",
-        "ip-prefix",
-        "policy-attachment"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "dynamic-routing-ready"
-      ],
-      "provides": [
-        "route-policy-ready"
-      ],
-      "trigger": "A route filter, ACL, or IP Prefix object is defined for a routing protocol.",
-      "applicability_boundary": "Candidate only while the attachment or runtime effect is missing; an object definition alone is not a validated policy rule.",
-      "file": "references/design-rules/routing-policy.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "1138c547b3704af81f173f98da674ab4d76b6f200fa5cecc938a5a80be6b0706"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "8003eb77b58cc2ea62a67529366ea212faa31feb44e83c438608f30a6bae4087"
     },
     {
       "id": "DR-PPP-001",
       "title": "Keep PPP authentication roles explicit before validating reachability",
-      "status": "validated",
       "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
       "tags": [
         "ppp",
         "pppoe",
@@ -1275,7 +739,6 @@
         "aaa",
         "authentication"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "interface-map-confirmed",
         "platform-support-confirmed"
@@ -1287,72 +750,13 @@
       "applicability_boundary": "Reassess when the link is not PPP/PPPoE, when authentication is delegated externally, or when the target VRP/eNSP version changes supported syntax.",
       "file": "references/design-rules/wan-tunneling.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "862651bcb5767133e726e6860f48eea307996bb493b4f696c97309feaaf63fa1"
-    },
-    {
-      "id": "DR-PPP-002",
-      "title": "Treat PPPoE address negotiation as a prerequisite to edge services",
-      "status": "candidate",
-      "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
-      "tags": [
-        "pppoe",
-        "nat",
-        "address-pool",
-        "dialer",
-        "default-route"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "interface-map-confirmed",
-        "platform-support-confirmed"
-      ],
-      "provides": [
-        "wan-session-ready",
-        "egress-route-resolved"
-      ],
-      "trigger": "An edge router must obtain a negotiated PPPoE address and then provide NAT or a default route to an internal network.",
-      "applicability_boundary": "Do not generalize to a static WAN, a different authentication backend, or a platform whose PPPoE/NAT behavior is unconfirmed.",
-      "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "73d296ae3b85606378939824affec1d3d4797025989f7c42412226dfdace4937"
-    },
-    {
-      "id": "DR-PPP-003",
-      "title": "Treat PAP-to-CHAP changes as sequential phases on one link",
-      "status": "candidate",
-      "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
-      "tags": [
-        "ppp",
-        "pap",
-        "chap",
-        "authentication",
-        "transition"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "interface-map-confirmed",
-        "platform-support-confirmed"
-      ],
-      "provides": [
-        "authentication-transition-ready"
-      ],
-      "trigger": "A PPP link must be tested with PAP and then reconfigured for CHAP.",
-      "applicability_boundary": "Candidate until both phases have runtime authentication evidence and the domain/credential source is resolved; PAP and CHAP are not simultaneous final configuration.",
-      "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "373d1e957a8130d4c0ea9b612d188168fb2472daa8d50447c2eb44d5277d45dc"
+      "end_line": 16,
+      "content_sha256": "0026126ecafdd47bca5a0515acab9b641ea7f6f563ed55ccecb03dfce6b9afd1"
     },
     {
       "id": "DR-QOS-001",
       "title": "Keep MQC classification, behavior, policy, attachment, and counters aligned",
-      "status": "validated",
       "catalog": "qos-traffic-engineering.md",
-      "catalog_state": "active",
       "tags": [
         "qos",
         "mqc",
@@ -1362,7 +766,6 @@
         "policing",
         "statistics"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "internal-routing-ready",
         "packet-identity-visible"
@@ -1374,55 +777,19 @@
       "applicability_boundary": "Confirm current device support, attachment restrictions, hardware resources, units, and action compatibility; a displayed policy or counter increment does not by itself prove throughput, latency, loss, or an SLA.",
       "file": "references/design-rules/qos-traffic-engineering.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "683c267395af89bffff2630e29ed01a440d1908a4da1f227322b7360a7a91578"
-    },
-    {
-      "id": "DR-QOS-002",
-      "title": "Place identity-sensitive policing where the original identity is visible",
-      "status": "candidate",
-      "catalog": "qos-traffic-engineering.md",
-      "catalog_state": "active",
-      "tags": [
-        "qos",
-        "policing",
-        "pre-nat",
-        "post-nat",
-        "direction",
-        "source-ip",
-        "destination-ip",
-        "counters",
-        "packet-processing-order"
-      ],
-      "evidence_level": "candidate; source-derived from S V600 and AR QoS examples and not independently runtime-validated in this project.",
-      "requires": [
-        "egress-route-resolved",
-        "packet-processing-order-defined",
-        "packet-identity-visible"
-      ],
-      "provides": [
-        "qos-policy-ready"
-      ],
-      "trigger": "Per-IP, per-subnet, or service policing must remain tied to an address identity while traffic crosses NAT or dual exits.",
-      "applicability_boundary": "Candidate until platform processing order, units, hardware resource limits, and runtime counter/traffic evidence are confirmed; a queue profile or displayed counter is not an SLA.",
-      "file": "references/design-rules/qos-traffic-engineering.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "76a59e1d81134fb57d24d8bbfbefcfed8ebcd0fe3e4d049585e7fb6fcbd3cc19"
+      "end_line": 16,
+      "content_sha256": "2308bb8d77bb85327313f1738ea33e805f365dc3e7a77e04e2144287a4b5854e"
     },
     {
       "id": "DR-RIP-001",
       "title": "Separate dynamic-routing method scope from learned-route proof",
-      "status": "validated",
       "catalog": "routing-policy.md",
-      "catalog_state": "active",
       "tags": [
         "rip",
         "dynamic-routing",
         "route-learning",
         "debugging"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "layer3-adjacency-ready"
       ],
@@ -1433,23 +800,20 @@
       "trigger": "A project introduces RIP or another dynamic-routing process and claims that remote prefixes have been learned.",
       "applicability_boundary": "Do not infer RIPv2 commands from a title-only heading, and do not treat static reachability or a protocol packet screenshot as proof of every learned route.",
       "file": "references/design-rules/routing-policy.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "50b79c51b97eacbb790a95c065d12c10704212a4a1a465e68a042034c41d286d"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "c224134d07737b207f5ddb8e1fcfea9c96bd6b95555f4b6ca1b6bc595b8217e6"
     },
     {
       "id": "DR-ROUTE-001",
       "title": "Design forward and return paths as separate obligations",
-      "status": "validated",
       "catalog": "routing-policy.md",
-      "catalog_state": "active",
       "tags": [
         "static-route",
         "asymmetric-routing",
         "return-path",
         "verification"
       ],
-      "evidence_level": "validated design constraint; require current-project runtime evidence for operational claims.",
       "requires": [
         "layer3-adjacency-ready"
       ],
@@ -1462,44 +826,13 @@
       "applicability_boundary": "Reassess when the topology is directly connected, when a dynamic protocol owns the route, or when the requirement does not constrain path direction. Failover remains unproven until the requested fault is executed and observed.",
       "file": "references/design-rules/routing-policy.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "519b33cde3d8315b80a0524b0cdf13d02c4057574930a4b195a25104519ba12f"
-    },
-    {
-      "id": "DR-ROUTE-002",
-      "title": "Use route preference to stage active and alternate paths",
-      "status": "candidate",
-      "catalog": "routing-policy.md",
-      "catalog_state": "active",
-      "tags": [
-        "static-route",
-        "floating-static",
-        "preference",
-        "load-balance",
-        "failover"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "layer3-adjacency-ready",
-        "forward-path-defined",
-        "return-path-defined"
-      ],
-      "provides": [
-        "alternate-path-ready"
-      ],
-      "trigger": "A design needs an active static route, a higher-preference backup, or a later equal-preference load-sharing stage.",
-      "applicability_boundary": "Candidate only until runtime route-table output and a controlled failure test confirm the platform behavior; do not claim load balancing from equal-looking configuration lines.",
-      "file": "references/design-rules/routing-policy.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "be7ef58ae119da934f72578c5f5c3037b45a5f141749bcc97175f63057c9c7c3"
+      "end_line": 16,
+      "content_sha256": "faf6a76ed8578780594c0e071009dad6b7e8130ee6260fda7253cfc39eea2912"
     },
     {
       "id": "DR-ROUTE-003",
       "title": "Treat source protocol outputs as scoped observations",
-      "status": "validated",
       "catalog": "routing-policy.md",
-      "catalog_state": "active",
       "tags": [
         "rip",
         "ospf",
@@ -1507,7 +840,6 @@
         "source-evidence",
         "verification"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "topology-baseline-confirmed"
       ],
@@ -1517,45 +849,14 @@
       "trigger": "A screenshot or excerpt contains a dynamic-routing peer, route, or path result for only one device or phase.",
       "applicability_boundary": "Complete device-by-device output and a clean rerun are required before extending an observed result into a broader convergence claim.",
       "file": "references/design-rules/routing-policy.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "50b7d7543224aaee82f0de72caf130e1fd84f4b5d30b516c2ba188dfb554d778"
-    },
-    {
-      "id": "DR-RSTP-001",
-      "title": "Treat fast convergence and edge protection as separate runtime claims",
-      "status": "candidate",
-      "catalog": "campus-layer2.md",
-      "catalog_state": "active",
-      "tags": [
-        "rstp",
-        "convergence",
-        "edge-port",
-        "bpdu-protection",
-        "loop-protection"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "layer2-transport-ready",
-        "loop-domain-defined"
-      ],
-      "provides": [
-        "layer2-path-plan-ready",
-        "fault-test-plan-ready"
-      ],
-      "trigger": "A design uses RSTP root roles, a controlled link failure, and edge/protection features.",
-      "applicability_boundary": "Candidate while runtime convergence and exact protection contexts are missing; do not use this rule to generalize classic STP or MSTP behavior.",
-      "file": "references/design-rules/campus-layer2.md",
-      "start_line": 110,
-      "end_line": 123,
-      "content_sha256": "365200059dfe94b567d5ec1d9096d03ad6616e8587cd358211ad6d4860bb6e32"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "6e153a80e9ab8484851caefae4d0aaeaebc12d8f2e23f909c8b1e5f3bc1eb3c2"
     },
     {
       "id": "DR-SNMP-001",
       "title": "Design SNMP as a matched version, access scope, and notification tuple",
-      "status": "validated",
       "catalog": "operations-automation.md",
-      "catalog_state": "active",
       "tags": [
         "snmp",
         "nms",
@@ -1565,7 +866,6 @@
         "inform",
         "management"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "management-path-ready",
         "management-access-ready"
@@ -1577,15 +877,13 @@
       "applicability_boundary": "Confirm the device's current command set and organizational security policy; do not disable credential-complexity controls, expose write access, or choose obsolete authentication/privacy merely because the dated source demonstrates it.",
       "file": "references/design-rules/operations-automation.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "9e565488b3b966bc9f7ea389017919bfeef611fc320d64474740424aa6506f9c"
+      "end_line": 16,
+      "content_sha256": "5669b7cbb0143516017309889ad1142a7ceebdc5ae4990fa3f8f6a0cb51e53b9"
     },
     {
       "id": "DR-STACK-001",
       "title": "Establish stack-member compatibility before cabling",
-      "status": "validated",
       "catalog": "platform-infrastructure.md",
-      "catalog_state": "active",
       "tags": [
         "stacking",
         "istack",
@@ -1593,7 +891,6 @@
         "software",
         "hardware"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "hardware-inventory-confirmed",
         "platform-support-confirmed"
@@ -1604,16 +901,14 @@
       "trigger": "Multiple switches are to operate as one logical stack.",
       "applicability_boundary": "This rule does not replace the target platform's compatibility documentation or a pre-change lab test.",
       "file": "references/design-rules/platform-infrastructure.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "b47c1841b1c734c7c65d794888ee4dc990b0d65f8f3ddc2281a3a666362041fd"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "2b94cf6e0beb675e3116dfa65d3d4d951efbedc7ff48c07d5ead5119b24241bc"
     },
     {
       "id": "DR-STACK-002",
       "title": "Plan member IDs, priorities, and roles before enabling stack",
-      "status": "validated",
       "catalog": "platform-infrastructure.md",
-      "catalog_state": "active",
       "tags": [
         "stacking",
         "member-id",
@@ -1621,7 +916,6 @@
         "master",
         "standby"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "stack-compatibility-confirmed"
       ],
@@ -1631,16 +925,14 @@
       "trigger": "A stack needs predictable master/standby selection and stable management identity.",
       "applicability_boundary": "Role selection can change after failure or reboot; the planned role is not proof of the current runtime role.",
       "file": "references/design-rules/platform-infrastructure.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "f67d2074a2d5dbe224782c12ff9f46d70b2e008ca5b285f8245d0db383a6d64a"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "ff59a903331de8362ca78ec73726d1182dbe484751a7e56174cc93529d6918e6"
     },
     {
       "id": "DR-STACK-003",
       "title": "Treat stack cabling and enablement as a high-risk change",
-      "status": "validated",
       "catalog": "platform-infrastructure.md",
-      "catalog_state": "active",
       "tags": [
         "stacking",
         "change-safety",
@@ -1648,7 +940,6 @@
         "configuration-loss",
         "rollback"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "stack-role-plan-ready",
         "change-baseline-ready"
@@ -1659,73 +950,14 @@
       "trigger": "Enabling stacking, changing member IDs/priorities, installing stack hardware, or connecting stack cables requires a reboot or power cycle.",
       "applicability_boundary": "Exact data-loss and reboot behavior is platform/version specific; stop when hardware identity or rollback is uncertain.",
       "file": "references/design-rules/platform-infrastructure.md",
-      "start_line": 65,
-      "end_line": 78,
-      "content_sha256": "343a52329f68501e7a215ead79c46c323d70d5c391741814645ff5d1f52b0ee9"
-    },
-    {
-      "id": "DR-STP-001",
-      "title": "Derive a single-tree forwarding path from the graph and cost intent",
-      "status": "candidate",
-      "catalog": "campus-layer2.md",
-      "catalog_state": "active",
-      "tags": [
-        "stp",
-        "root-bridge",
-        "path-selection",
-        "cost",
-        "vlan"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "layer2-transport-ready",
-        "loop-domain-defined"
-      ],
-      "provides": [
-        "layer2-path-plan-ready"
-      ],
-      "trigger": "A Layer-2 loop must use a specified root bridge or engineered forwarding path under classic STP.",
-      "applicability_boundary": "Reassess for RSTP/MSTP, per-instance path requirements, unequal link semantics, or missing runtime status evidence.",
-      "file": "references/design-rules/campus-layer2.md",
-      "start_line": 80,
-      "end_line": 93,
-      "content_sha256": "be16f7cac40523e3dc8941d9137d2b26cd621077d151fa06a1b55b76b1b198ab"
-    },
-    {
-      "id": "DR-WAN-001",
-      "title": "Resolve serial identity and address conflicts before protocol claims",
-      "status": "candidate",
-      "catalog": "wan-tunneling.md",
-      "catalog_state": "active",
-      "tags": [
-        "wan",
-        "serial",
-        "hdlc",
-        "addressing",
-        "static-route",
-        "conflict"
-      ],
-      "evidence_level": "candidate; exclude from normal projects until independently validated.",
-      "requires": [
-        "interface-map-confirmed",
-        "topology-baseline-confirmed"
-      ],
-      "provides": [
-        "layer3-adjacency-ready"
-      ],
-      "trigger": "A serial WAN design depends on slot/index mapping, point-to-point addressing, and a link protocol such as HDLC.",
-      "applicability_boundary": "Candidate while a source conflict is unresolved or PC/runtime route evidence is absent; normalization alone is not approval.",
-      "file": "references/design-rules/wan-tunneling.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "cf3d2b659475fe96dc264be5ffb175a2ba1455a1a5f42b486ddf4b1f2e8223ac"
+      "start_line": 57,
+      "end_line": 68,
+      "content_sha256": "bcc52100ba8153ea57f1552c10f8f6ad66a57693b590e87ce51d43996e1d83d5"
     },
     {
       "id": "DR-WLAN-001",
       "title": "Separate management VLAN from client service VLANs",
-      "status": "validated",
       "catalog": "wireless.md",
-      "catalog_state": "active",
       "tags": [
         "wlan",
         "ac",
@@ -1733,7 +965,6 @@
         "management-vlan",
         "service-vlan"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "platform-support-confirmed",
         "layer2-transport-ready"
@@ -1745,15 +976,13 @@
       "applicability_boundary": "Tunnel and direct-forward modes have different wired VLAN requirements; confirm the target AC/AP and switch behavior.",
       "file": "references/design-rules/wireless.md",
       "start_line": 5,
-      "end_line": 18,
-      "content_sha256": "1c27e380beb28938a820b5c1dc69f39955b420374b16afc815e3917f83976b5e"
+      "end_line": 16,
+      "content_sha256": "1ad16cc74faf76c9157cbe7626dad0303b01bbde8a80815645e588bac27af99c"
     },
     {
       "id": "DR-WLAN-002",
       "title": "Separate AP registration from user association",
-      "status": "validated",
       "catalog": "wireless.md",
-      "catalog_state": "active",
       "tags": [
         "wlan",
         "capwap",
@@ -1761,7 +990,6 @@
         "sta",
         "association"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "wireless-management-ready"
       ],
@@ -1771,16 +999,14 @@
       "trigger": "A WLAN deployment reports that an AP is online or that a client can use an SSID.",
       "applicability_boundary": "`display ap all` normal state proves only the AP control-plane result; it does not prove RF association, address assignment, or egress.",
       "file": "references/design-rules/wireless.md",
-      "start_line": 20,
-      "end_line": 33,
-      "content_sha256": "c568386da25f99eb7b3b1905e3141db4d262e8c7a199df856ce624fb66e37b3d"
+      "start_line": 18,
+      "end_line": 29,
+      "content_sha256": "b401bf6c57594a0671a0535b1c3ce093e9d795af08ef0faf2bbd187b699ac0ea"
     },
     {
       "id": "DR-WLAN-003",
       "title": "Keep the WLAN template reference chain complete",
-      "status": "validated",
       "catalog": "wireless.md",
-      "catalog_state": "active",
       "tags": [
         "wlan",
         "ssid",
@@ -1789,7 +1015,6 @@
         "radio",
         "ap-group"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "platform-support-confirmed"
       ],
@@ -1799,16 +1024,14 @@
       "trigger": "An SSID is built from reusable AC WLAN templates.",
       "applicability_boundary": "Template commands and supported security algorithms vary by AC version; a syntactically accepted profile may still be unbound.",
       "file": "references/design-rules/wireless.md",
-      "start_line": 35,
-      "end_line": 48,
-      "content_sha256": "07743d9e855bdae8212ce1dabac9c0d9df2dfc41557bffedc30635aec92349e0"
+      "start_line": 31,
+      "end_line": 42,
+      "content_sha256": "e5b9b203007aa2aa85e74ac468f157b827b31521e8df57cd8e14d6f06c154865"
     },
     {
       "id": "DR-WLAN-004",
       "title": "Prove wired continuity for the selected forwarding mode",
-      "status": "validated",
       "catalog": "wireless.md",
-      "catalog_state": "active",
       "tags": [
         "wlan",
         "tunnel-forward",
@@ -1817,7 +1040,6 @@
         "gateway",
         "dhcp"
       ],
-      "evidence_level": "source-derived design constraint; confirm target-platform support and runtime behavior.",
       "requires": [
         "wireless-management-ready",
         "wireless-template-ready",
@@ -1831,9 +1053,9 @@
       "trigger": "Wireless users must reach a wired gateway or external network.",
       "applicability_boundary": "AP online and SSID association are insufficient; the user VLAN and exit path need their own evidence.",
       "file": "references/design-rules/wireless.md",
-      "start_line": 50,
-      "end_line": 63,
-      "content_sha256": "06c73431d9020b8ca8e83c452657195459022a22fad26e6c741a429b03adb615"
+      "start_line": 44,
+      "end_line": 55,
+      "content_sha256": "240365db8f3454b04db57330207e4c18c30abc259409a0aeeb95ceab9d9fba0d"
     }
   ]
 }

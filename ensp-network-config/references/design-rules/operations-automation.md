@@ -3,9 +3,7 @@
 Read these rules for device-management reachability, monitoring access, and event delivery. Match each trigger and boundary before use.
 
 ## DR-SNMP-001: Design SNMP as a matched version, access scope, and notification tuple
-- Status: validated
 - Tags: snmp, nms, mib-view, acl, trap, inform, management
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `management-path-ready`, `management-access-ready`
 - Provides: `monitoring-ready`
 - Trigger: A network-management system must poll a device or receive device notifications through SNMP.

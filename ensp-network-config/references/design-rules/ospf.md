@@ -3,9 +3,7 @@
 Read these rules for OSPF area layout, adjacency dependencies, and route-learning decisions. Match the area topology and platform support before use.
 
 ## DR-OSPF-001: Build multi-area OSPF around explicit backbone and ABR continuity
-- Status: validated
 - Tags: ospf, multiarea, abr, router-id, routing
-- Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
 - Requires: `layer3-adjacency-ready`, `topology-baseline-confirmed`
 - Provides: `dynamic-routing-ready`, `internal-routing-ready`
 - Trigger: The topology or requirement uses multiple OSPF areas and requires inter-area reachability.
@@ -17,25 +15,8 @@ Read these rules for OSPF area layout, adjacency dependencies, and route-learnin
 - Implementation order: Confirm subnets and roles; assign unique Router IDs; configure backbone and non-backbone memberships; configure special-area behavior only where required; verify adjacency, inter-area route learning, and end-to-end reachability.
 - Verification method: Check area/network structure and Router-ID uniqueness, inspect OSPF neighbor and route state, then test at least one positive inter-area path and the required endpoint or loopback reachability. Do not treat static configuration review as runtime adjacency proof.
 
-## DR-OSPF-002: Apply special-area behavior consistently to all members of the area
-- Status: candidate
-- Tags: ospf, nssa, stub, totally-stub, area-policy
-- Evidence level: candidate; exclude from normal projects until independently validated.
-- Requires: `dynamic-routing-ready`
-- Provides: `route-policy-ready`
-- Trigger: The requirement explicitly asks for NSSA, stub, totally stub, summary suppression, or a comparable special-area behavior.
-- Design goal: Make the area policy predictable by applying the same area type semantics to the correct edge and internal members while preserving the ABR boundary.
-- Decision logic: Identify the area edge/ABR and all area members from the topology; select the special-area type from the requirement's route-visibility/default-route goal; apply compatible member settings and verify the resulting route scope before adding gateway or service dependencies.
-- Recompute parameters: Area membership, ABR and internal-router roles, special-area type, no-summary/default behavior, and any external-route injection requirements.
-- Applicability boundary: Do not use when the requirement does not specify route suppression or external-route behavior, or when platform support for the selected special-area type is unclear.
-- Common failure: ABR and internal routers disagree on area type, a no-summary setting is applied to the wrong device, or a default/external route is assumed without direct evidence.
-- Implementation order: Establish ordinary OSPF adjacency and backbone reachability; apply consistent area-type settings; verify route-table behavior; then add VRRP or service paths.
-- Verification method: Inspect area configuration and OSPF neighbor state, compare route tables on the ABR and internal routers, and test required inter-area reachability. Do not infer fault recovery or universal platform support from normal-state adjacency and routes.
-
 ## DR-OSPF-003: Keep single-area adjacency, route learning, and reachability separate
-- Status: validated
 - Tags: ospf, single-area, adjacency, route-learning, verification
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `layer3-adjacency-ready`
 - Provides: `dynamic-routing-ready`, `internal-routing-ready`
 - Trigger: A single-area OSPF design claims that internal VLAN or loopback prefixes are reachable through a transit link.

@@ -3,9 +3,7 @@
 Read these rules for ACL scope, DHCP trust boundaries, source validation, and positive/negative access assertions. Match each trigger and boundary before use.
 
 ## DR-ACL-001: Bind an ACL to the intended control-plane context and direction
-- Status: validated
 - Tags: acl, vty, control-plane, direction, rule-order
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `management-path-ready`
 - Provides: `management-source-policy-ready`
 - Trigger: A device must restrict management or control-plane access with an ACL applied to a VTY or equivalent context.
@@ -18,24 +16,20 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Correlate route reachability, ACL display, application context/direction, and access outcomes.
 
 ## DR-ACL-002: Prove five-tuple permits together with an explicit negative destination
-- Status: validated
 - Tags: acl, advanced-acl, five-tuple, placement, direction, original-source, negative-test
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `internal-routing-ready`
 - Provides: `authorization-policy-ready`
 - Trigger: An advanced ACL permits or denies a narrowly scoped protocol/source/destination tuple and depends on explicit or implicit treatment of other traffic.
 - Design goal: Distinguish the intended positive or denied tuple from the remaining traffic space and prove both sides of the policy.
 - Decision logic: Define the exact tuple, then trace both directions and choose the smallest physical or logical attachment set that sees the required packet identity before it changes. Ingress on a source-facing port, outbound on a shared uplink, or outbound near the protected destination may all be valid; choose by tuple visibility, bypass resistance, and clarity rather than copying an interface context. Avoid duplicate attachment when blocking one required direction already enforces the stated session boundary.
-- Recompute parameters: Protocol, source/destination prefixes and services, original and transformed packet identity, candidate attachment ports, ingress/outbound direction, alternate paths, rule order, and positive/negative assertions.
+- Recompute parameters: Protocol, source/destination prefixes and services, original and transformed packet identity, possible attachment ports, ingress/outbound direction, alternate paths, rule order, and positive/negative assertions.
 - Applicability boundary: A project may require physical-port placement, but Vlanif or policy-context ACLs remain valid in other designs. A failed bidirectional Ping after blocking one direction proves only that reachability assertion, not comprehensive control of every protocol or reverse/new session.
 - Common failure: The ACL is bound where the original source is no longer visible, an alternate path bypasses the attachment, a broad rule is applied at too many points, or one failed Ping is treated as proof of the whole policy.
 - Implementation order: Establish routing; define the tuple; trace both directions and alternate paths; select the clearest non-bypassable attachment and direction; configure and inspect the policy; then execute positive and negative tests.
 - Verification method: Correlate route/path evidence, ACL counters, actual attachment/direction, and separate permitted/denied results for the exact tuples; include an alternate-path check when one exists.
 
 ## DR-DHCPSEC-001: Place DHCP trust only on the legitimate server path
-- Status: validated
 - Tags: dhcp-snooping, rogue-dhcp, trusted-port, vlan, access-security
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `layer2-transport-ready`, `address-service-ready`
 - Provides: `source-trust-ready`
 - Trigger: DHCP clients share a Layer-2 access domain where unauthorized DHCP replies must be blocked.
@@ -48,9 +42,7 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Correlate trust state, Snooping bindings, legitimate lease acquisition, and rejected unauthorized server behavior.
 
 ## DR-IPSG-001: Enforce source identity only after the binding source is complete
-- Status: validated
 - Tags: ipsg, source-guard, dhcp-snooping, ip-mac-binding, access-security
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `source-trust-ready`
 - Provides: `source-identity-policy-ready`
 - Trigger: Access ports must reject hosts whose source IP/MAC/VLAN/interface identity does not match the authorized assignment.
@@ -63,9 +55,7 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Compare binding-table state with permitted legitimate traffic and denied mismatched source traffic on the exact enforcement scope.
 
 ## DR-FW-001: Assign firewall interfaces to zones before writing policy
-- Status: validated
 - Tags: firewall, security-zone, trust, dmz, untrust
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `interface-map-confirmed`, `layer3-adjacency-ready`
 - Provides: `firewall-zones-ready`
 - Trigger: A firewall policy refers to trust, DMZ, untrust, or equivalent security zones.
@@ -78,9 +68,7 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Correlate zone display, policy match, session table, and source/destination test results.
 
 ## DR-FW-002: Express firewall policy direction and scope explicitly
-- Status: validated
 - Tags: firewall, security-policy, direction, least-privilege, service
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `firewall-zones-ready`, `internal-routing-ready`
 - Provides: `security-policy-ready`, `authorization-policy-ready`
 - Trigger: A firewall must permit a specific inter-zone business flow.
@@ -93,9 +81,7 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Use policy counters/logs, session table, positive result, and explicit negative result.
 
 ## DR-FW-003: Treat NAT as address transformation, not authorization
-- Status: validated
 - Tags: firewall, nat, security-policy, source-nat, server-publish
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `security-policy-ready`, `egress-route-resolved`, `return-path-defined`
 - Provides: `firewall-translation-ready`
 - Trigger: A firewall uses source NAT, PAT, or destination/server mapping.
@@ -108,9 +94,7 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Verification method: Check policy action, NAT/session translation, and endpoint behavior separately.
 
 ## DR-FW-004: Pair every allow rule with a deliberate deny test
-- Status: validated
 - Tags: firewall, negative-test, stateful, access-control, verification
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `security-policy-ready`
 - Provides: `security-validation-ready`
 - Trigger: A firewall rule is described as successfully enforcing an access boundary.
@@ -121,18 +105,3 @@ Read these rules for ACL scope, DHCP trust boundaries, source validation, and po
 - Common failure: Only the positive path is tested, a reverse established flow is confused with a new session, or a NAT failure is misreported as policy denial.
 - Implementation order: Establish underlay; inspect zones; test positive; initiate controlled negative; inspect policy/session/logs; report the failure layer.
 - Verification method: Require separate positive/negative outcomes and policy/session evidence tied to the exact flow.
-
-## DR-MGMT-001: Keep management transport, AAA, and source restriction as separate gates
-- Status: candidate
-- Tags: management-access, ssh, stelnet, telnet, radius, hwtacacs, vty, acl
-- Evidence level: candidate; source-derived from AR management examples and not independently runtime-validated in this project.
-- Requires: `management-path-ready`, `platform-support-confirmed`
-- Provides: `management-access-ready`
-- Trigger: A device management requirement combines SSH/STelnet or legacy Telnet with local, RADIUS, or HWTACACS authentication and a source restriction.
-- Design goal: Prevent a successful login in one layer from being mistaken for proof of the transport, identity, authorization, and source-boundary layers.
-- Decision logic: Prefer STelnet/SSH for new management; retain Telnet only for an explicit compatibility requirement; define the management source/interface, AAA method and fallback, VTY transport, user privilege/service, and source ACL independently; then test a permitted login and a controlled rejected source/transport.
-- Recompute parameters: Management subnet/interface, SSH key/version, VTY lines, AAA server/group/keys, local fallback, authorization level, permitted source scope, transport list, and negative assertions.
-- Applicability boundary: Candidate until target VRP version, AAA server reachability, key size, transport syntax, and both positive/negative login outcomes are confirmed; credentials in the source are fixed examples and must never be copied.
-- Common failure: Telnet is enabled without a compatibility reason, RADIUS/HWTACACS reachability is assumed, source ACL is omitted, or an authenticated session is treated as proof of authorization and least privilege.
-- Implementation order: Establish management path; create keys and AAA method; bind transport and VTY behavior; add source restriction; inspect state; test allowed access, failed authentication, wrong source, and disallowed transport separately.
-- Verification method: Correlate listening transport, AAA/VTY configuration, source restriction, authentication/authorization result, and negative login evidence.

@@ -3,9 +3,7 @@
 Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. Match each trigger and boundary before use.
 
 ## DR-MSTP-VRRP-004: Derive a VRRP tuple independently for each VLAN
-- Status: validated
 - Tags: vrrp, vlan, gateway, addressing
-- Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
 - Requires: `gateway-ready`
 - Provides: `redundant-gateway-ready`
 - Trigger: A VLAN has two or more redundant Layer-3 gateway interfaces using VRRP.
@@ -18,9 +16,7 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Verification method: Inspect VRRP state and address ownership, ping the virtual gateway from each VLAN, and repeat after the specified gateway/uplink fault.
 
 ## DR-NAT-001: Bind Easy-IP source scope to the resolved egress path
-- Status: validated
 - Tags: nat, easy-ip, acl, default-route, gateway
-- Evidence level: validated design constraint; require current-project runtime evidence for operational claims.
 - Requires: `internal-routing-ready`, `egress-route-resolved`, `return-path-defined`
 - Provides: `outbound-translation-ready`
 - Trigger: An edge router must translate selected private source networks toward a public or provider-facing path.
@@ -32,25 +28,8 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Implementation order: Confirm internal routing; confirm the public edge and return path; define source scope; apply NAT to the resolved egress; then test positive internal-to-public reachability and the explicitly required negative direction.
 - Verification method: Check ACL scope, NAT binding, route/default state and translation evidence, then execute the required positive and negative reachability assertions. Static structure or attested intent alone does not prove runtime translation.
 
-## DR-GW-001: Align access VLAN transport with the selected Layer-3 gateway boundary
-- Status: deprecated
-- Tags: gateway, inter-vlan, vlanif, router-on-a-stick, trunk
-- Evidence level: deprecated; superseded by DR-GW-002.
-- Requires: `layer2-transport-ready`, `vlan-roles-defined`
-- Provides: `gateway-ready`
-- Trigger: Multiple endpoint VLANs must reach one or more Layer-3 gateway interfaces through access and trunk transport.
-- Design goal: Make the endpoint VLAN, transport VLAN set, and gateway termination mapping agree before interpreting cross-VLAN reachability.
-- Decision logic: Derive access membership and inter-switch VLAN carriage from the endpoint placement; choose VLANIF or 802.1Q subinterfaces from the gateway design; map each VLAN to one gateway boundary and address scope; then verify interface state, direct routes/ARP, and cross-VLAN results.
-- Recompute parameters: VLAN roles, access ports, trunk allow sets, gateway termination type, subinterface/VLANIF identifiers, gateway addresses, endpoint addresses, and expected positive/negative paths.
-- Applicability boundary: Candidate while endpoint settings and runtime gateway/cross-VLAN evidence are missing; do not assume a method script is a complete deployable configuration.
-- Common failure: A VLAN is allowed on one trunk but not the next, a subinterface tag does not match the switch transport, a Vlanif lacks active member ports, or a static gateway annotation is mistaken for runtime reachability.
-- Implementation order: Confirm endpoint/VLAN roles; configure access and transport; configure the chosen gateway termination; verify interface/direct-route state; then test cross-VLAN reachability and any required isolation.
-- Verification method: Correlate VLAN/access/trunk state, gateway interface state, ARP/direct routes, and endpoint results.
-
 ## DR-NAT-002: Treat multi-mode NAT exercises as ordered transitions with per-phase proof
-- Status: validated
 - Tags: nat, static-nat, outbound, easy-ip, nat-server, phase-transition
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `egress-route-resolved`, `return-path-defined`
 - Provides: `nat-transition-ready`
 - Trigger: A source material demonstrates static NAT, address-group no-PAT, Easy-IP, or NAT Server in sequential phases.
@@ -63,9 +42,7 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Verification method: Capture NAT table/translation state and separate positive/negative reachability for every phase and service.
 
 ## DR-GW-002: Gate inter-VLAN reachability on transport and gateway alignment
-- Status: validated
 - Tags: gateway, inter-vlan, vlan, trunk, verification
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `layer2-transport-ready`, `vlan-roles-defined`
 - Provides: `gateway-ready`
 - Trigger: A staged experiment carries multiple VLANs from access ports over a trunk to VLANIF gateways.
@@ -78,9 +55,7 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Verification method: Correlate VLAN/trunk state with gateway ARP/direct routes and endpoint results.
 
 ## DR-GW-003: Separate VRRP role transitions from failure and recovery claims
-- Status: validated
 - Tags: vrrp, gateway, failover, recovery, verification
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `redundant-gateway-ready`
 - Provides: `gateway-failover-plan-ready`, `fault-test-plan-ready`
 - Trigger: A VRRP experiment changes priority or reports a new Master and also requires gateway failure/recovery.
@@ -91,18 +66,3 @@ Read these rules for first-hop gateway, inter-VLAN, and edge-service decisions. 
 - Common failure: A manual priority change is labeled failover, or a new Master state is treated as proof of upstream reachability and recovery.
 - Implementation order: Establish normal gateway/path; record baseline; perform the requested fault; verify state and reachability; restore and measure recovery.
 - Verification method: Use VRRP state, client path output, fault logs, and timed recovery evidence as separate records.
-
-## DR-NAT-003: Separate server publication, hairpin access, ALG, and outbound translation claims
-- Status: candidate
-- Tags: nat, nat-server, hairpin, dns-map, alg, pbr, dual-exit, packet-processing-order
-- Evidence level: candidate; source-derived from sequential examples and not independently runtime-validated in this project.
-- Requires: `egress-route-resolved`, `return-path-defined`, `authorization-policy-ready`, `packet-processing-order-defined`
-- Provides: `server-publication-ready`
-- Trigger: A multi-exit edge must publish an internal service while also supporting inside access, DNS mapping, ALG, or general outbound NAT.
-- Design goal: Keep service publication, inside-to-published-name access, protocol assistance, and outbound source translation as separate contracts.
-- Decision logic: Derive the inside server, public service tuple, exit path, return route, and required client locations; configure only the required server mapping and outbound scope; add DNS mapping/ALG only for the named protocol; place a more-specific inside exception before a generic redirect or exit policy; then test each traffic direction separately.
-- Recompute parameters: Server/private and public addresses, service ports, exit interfaces, NAT selectors, DNS-map name/address, ALG requirement, PBR order, return routes, and positive/negative service assertions.
-- Applicability boundary: Candidate until target-platform processing order, hairpin behavior, ALG support, and runtime translation/session evidence are independently confirmed; a source NAT table or successful Ping does not prove service publication.
-- Common failure: A generic redirect captures an inside server response, DNS mapping is treated as authorization, an ALG is enabled without a protocol need, or an outbound rule changes the published-service path.
-- Implementation order: Establish underlay and return path; define authorization; define server mapping; add the inside exception and any required DNS/ALG function; bind outbound NAT; inspect translations/sessions; test inside, outside, and negative-service cases.
-- Verification method: Correlate policy match, translation direction, DNS/ALG state, applied-policy records, session state, and the exact service results.

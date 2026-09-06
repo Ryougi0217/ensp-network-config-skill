@@ -3,9 +3,7 @@
 Read these rules for hardware-dependent PoE planning and switch stacking changes. They are planning and risk rules, not a model compatibility table or a command cookbook.
 
 ## DR-PLAT-001: Confirm PoE hardware capability before port configuration
-- Status: validated
 - Tags: poe, hardware, power, platform-support
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `hardware-inventory-confirmed`, `platform-support-confirmed`
 - Provides: `poe-capability-confirmed`
 - Trigger: A switch is expected to power APs, phones, cameras, or other PoE endpoints.
@@ -18,9 +16,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Verification method: Inspect hardware/module capability, per-port power state, total/remaining budget, and a controlled shortage or alarm result when the platform permits it.
 
 ## DR-PLAT-002: Allocate limited PoE power by business criticality
-- Status: validated
 - Tags: poe, power-budget, priority, availability
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `poe-capability-confirmed`
 - Provides: `poe-budget-ready`
 - Trigger: Sum of endpoint demand may exceed the usable PoE budget.
@@ -33,9 +29,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Verification method: Compare configured priority and power consumption with the observed powered/depowered set and alarms.
 
 ## DR-STACK-001: Establish stack-member compatibility before cabling
-- Status: validated
 - Tags: stacking, istack, compatibility, software, hardware
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `hardware-inventory-confirmed`, `platform-support-confirmed`
 - Provides: `stack-compatibility-confirmed`
 - Trigger: Multiple switches are to operate as one logical stack.
@@ -48,9 +42,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Verification method: Check member discovery, stack link state, topology closure, and system role state after startup.
 
 ## DR-STACK-002: Plan member IDs, priorities, and roles before enabling stack
-- Status: validated
 - Tags: stacking, member-id, priority, master, standby
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `stack-compatibility-confirmed`
 - Provides: `stack-role-plan-ready`
 - Trigger: A stack needs predictable master/standby selection and stable management identity.
@@ -63,9 +55,7 @@ Read these rules for hardware-dependent PoE planning and switch stacking changes
 - Verification method: Compare planned and observed IDs, priorities, roles, system MAC, and member interfaces.
 
 ## DR-STACK-003: Treat stack cabling and enablement as a high-risk change
-- Status: validated
 - Tags: stacking, change-safety, reboot, configuration-loss, rollback
-- Evidence level: source-derived design constraint; confirm target-platform support and runtime behavior.
 - Requires: `stack-role-plan-ready`, `change-baseline-ready`
 - Provides: `stack-change-plan-ready`
 - Trigger: Enabling stacking, changing member IDs/priorities, installing stack hardware, or connecting stack cables requires a reboot or power cycle.

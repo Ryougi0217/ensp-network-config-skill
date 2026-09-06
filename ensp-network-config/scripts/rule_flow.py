@@ -22,12 +22,9 @@ RULE_INDEX_FILE = REFERENCES_DIR / "rule-index.json"
 RULE_HEADING_RE = re.compile(r"^## (DR-[^:]+):\s*(.+?)\s*$")
 FIELD_RE = re.compile(r"^- ([A-Za-z][A-Za-z ]+):\s*(.*?)\s*$")
 ACTIVE_LINK_RE = re.compile(r"\(design-rules/([^)]+\.md)\)")
-RESERVED_FILE_RE = re.compile(r"`([^`]+\.md)`")
 
 MANDATORY_FIELDS = {
-    "Status",
     "Tags",
-    "Evidence level",
     "Requires",
     "Provides",
     "Trigger",
@@ -67,29 +64,9 @@ def load_document(path: Path) -> dict[str, Any]:
     return data
 
 
-def section(text: str, start_heading: str, end_heading: str | None) -> str:
-    start = text.find(start_heading)
-    if start < 0:
-        raise ValueError(f"missing section: {start_heading}")
-    start += len(start_heading)
-    if end_heading is None:
-        return text[start:]
-    end = text.find(end_heading, start)
-    if end < 0:
-        raise ValueError(f"missing section: {end_heading}")
-    return text[start:end]
-
-
-def catalog_states() -> dict[str, str]:
+def active_catalogs() -> set[str]:
     text = CATALOG_INDEX.read_text(encoding="utf-8")
-    active = section(text, "## Active catalogs", "## Reserved routes")
-    reserved = section(text, "## Reserved routes", "## Rule ownership")
-    result = {name: "active" for name in ACTIVE_LINK_RE.findall(active)}
-    for name in RESERVED_FILE_RE.findall(reserved):
-        if name in result:
-            raise ValueError(f"catalog appears as active and reserved: {name}")
-        result[name] = "reserved"
-    return result
+    return set(ACTIVE_LINK_RE.findall(text))
 
 
 def parse_token_list(value: str) -> list[str]:
@@ -102,7 +79,7 @@ def parse_token_list(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def parse_catalog(path: Path, state: str) -> list[dict[str, Any]]:
+def parse_catalog(path: Path) -> list[dict[str, Any]]:
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
     starts: list[tuple[int, re.Match[str]]] = []
@@ -130,11 +107,8 @@ def parse_catalog(path: Path, state: str) -> list[dict[str, Any]]:
             {
                 "id": heading.group(1),
                 "title": heading.group(2).strip(),
-                "status": fields["Status"].strip(),
                 "catalog": path.name,
-                "catalog_state": state,
                 "tags": [item.strip() for item in fields["Tags"].split(",") if item.strip()],
-                "evidence_level": fields["Evidence level"].strip(),
                 "requires": parse_token_list(fields["Requires"]),
                 "provides": parse_token_list(fields["Provides"]),
                 "trigger": fields["Trigger"].strip(),
@@ -175,17 +149,16 @@ def load_capability_contract() -> dict[str, Any]:
 
 
 def build_index() -> dict[str, Any]:
-    states = catalog_states()
+    catalogs = active_catalogs()
     contract = load_capability_contract()
     allowed_capabilities = {item["id"] for item in contract["capabilities"]}
     rules: list[dict[str, Any]] = []
     errors: list[str] = []
     for path in sorted(CATALOG_DIR.glob("*.md")):
-        state = states.get(path.name, "unlisted")
-        if state == "unlisted":
+        if path.name not in catalogs:
             errors.append(f"catalog not listed in design-rules.md: {path.name}")
         try:
-            parsed = parse_catalog(path, state)
+            parsed = parse_catalog(path)
         except ValueError as exc:
             errors.append(str(exc))
             continue
@@ -203,10 +176,6 @@ def build_index() -> dict[str, Any]:
         raise ValueError("\n".join(errors))
 
     return {
-        "schema_version": "1.0.0",
-        "source": "references/design-rules/*.md",
-        "catalog_index": "references/design-rules.md",
-        "capability_contract": "references/rule-capabilities.json",
         "rules": sorted(rules, key=lambda item: item["id"]),
     }
 
@@ -432,15 +401,6 @@ def validate_plan(
             errors.append(f"{instance_id}: invalid validation_state {validation_state!r}")
         if reason_code not in reason_codes:
             errors.append(f"{instance_id}: invalid reason_code {reason_code!r}")
-        if application_state == "applied" and (rule["status"] != "validated" or rule["catalog_state"] != "active"):
-            errors.append(
-                f"{instance_id}: applied requires an active validated rule; {rule_id} is {rule['status']}/{rule['catalog_state']}"
-            )
-        if application_state == "advisory" and rule["status"] == "deprecated":
-            errors.append(f"{instance_id}: deprecated rule cannot be advisory")
-        if application_state in {"matched", "skipped"}:
-            warnings.append(f"{instance_id}: keep {application_state} decisions in rule-selection-log.jsonl")
-
         scope_refs = instance.get("scope_refs", [])
         if not isinstance(scope_refs, list) or not scope_refs:
             errors.append(f"{instance_id}: scope_refs must be a non-empty list")
@@ -534,15 +494,10 @@ def validate_plan(
             missing_provides = sorted(set(rule["provides"]) - provided_names)
             if missing_provides:
                 errors.append(f"{instance_id}: missing declared Provides capabilities {missing_provides}")
-        if application_state == "advisory" and provided:
-            errors.append(f"{instance_id}: advisory rules cannot provide project capabilities")
-
     for capability in capabilities:
         provider = capability.get("provider")
         if provider not in {"baseline", "user", "project"} and provider not in instance_by_id:
             errors.append(f"{capability.get('id')}: unknown provider {provider!r}")
-        elif provider in instance_by_id and instance_by_id[provider].get("application_state") == "advisory":
-            errors.append(f"{capability.get('id')}: advisory provider {provider} cannot supply a project capability")
 
     for cycle in detect_cycles(edges):
         errors.append("rule dependency cycle: " + " -> ".join(cycle))
@@ -607,16 +562,13 @@ def validate_plan(
         body_rules = {
             item.get("rule_id")
             for item in stage_instances
-            if item.get("application_state") in {"applied", "advisory"}
+            if item.get("application_state") == "applied"
         }
         catalogs = {rules[rule_id]["catalog"] for rule_id in body_rules if rule_id in rules}
-        advisories = [item for item in stage_instances if item.get("application_state") == "advisory"]
         if len(body_rules) > limits.get("max_rules_per_stage", 12):
             errors.append(f"{stage}: context has {len(body_rules)} rules; split the stage")
         if len(catalogs) > limits.get("max_catalogs_per_stage", 4):
             errors.append(f"{stage}: context has {len(catalogs)} catalogs; split the stage")
-        if len(advisories) > limits.get("max_candidate_advisories_per_stage", 3):
-            errors.append(f"{stage}: context has {len(advisories)} candidate advisories; reduce them")
 
     return {
         "valid": not errors,
@@ -649,10 +601,10 @@ def build_context(data: dict[str, Any], index: dict[str, Any], stage: str) -> st
         for item in data.get("instances", [])
         if isinstance(item, dict)
         and item.get("stage") == stage
-        and item.get("application_state") in {"applied", "advisory"}
+        and item.get("application_state") == "applied"
     ]
     if not stage_instances:
-        raise SystemExit(f"阶段没有 applied/advisory 规则实例: {stage}")
+        raise SystemExit(f"阶段没有 applied 规则实例: {stage}")
 
     capability_by_id = {
         item["id"]: item for item in data.get("capabilities", []) if isinstance(item, dict) and item.get("id")
@@ -758,8 +710,6 @@ def main() -> int:
     query = sub.add_parser("query", help="query rule metadata without loading rule bodies")
     query.add_argument("--tags", nargs="+", required=True)
     query.add_argument("--match", choices=("any", "all"), default="any")
-    query.add_argument("--include-candidates", action="store_true")
-    query.add_argument("--include-reserved", action="store_true")
     query.add_argument("--limit", type=int, default=30)
 
     validate = sub.add_parser("validate", help="validate a project rule plan")
@@ -795,15 +745,8 @@ def main() -> int:
 
     if args.command == "query":
         wanted_tags = {item.strip() for item in args.tags if item.strip()}
-        allowed_status = {"validated"}
-        if args.include_candidates:
-            allowed_status.add("candidate")
         matches: list[dict[str, Any]] = []
         for rule in index["rules"]:
-            if rule["status"] not in allowed_status:
-                continue
-            if rule["catalog_state"] != "active" and not args.include_reserved:
-                continue
             overlap = wanted_tags & set(rule["tags"])
             if (args.match == "all" and overlap != wanted_tags) or (args.match == "any" and not overlap):
                 continue
@@ -813,9 +756,7 @@ def main() -> int:
                     for key in (
                         "id",
                         "title",
-                        "status",
                         "catalog",
-                        "catalog_state",
                         "tags",
                         "requires",
                         "provides",
