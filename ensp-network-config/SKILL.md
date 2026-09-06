@@ -1,11 +1,16 @@
 ---
 name: ensp-network-config
-description: Analyze Huawei eNSP topology screenshots, project information, requirements, terminal output, and existing VRP configurations; create confirmed network plans; generate dependency-ordered stage TXT scripts for access, aggregation, core, routing, services, exit, and security; validate each stage with user attestation or runtime evidence; and diagnose inconsistencies. Use for eNSP configuration generation, staged implementation, verification, repair, or optional import of a verified lab case.
+description: Analyze Huawei eNSP topology screenshots, project information, requirements, terminal output, and existing VRP configurations; create confirmed network plans; generate dependency-ordered stage TXT scripts for access, aggregation, core, routing, services, exit, and security; validate each stage with user attestation or runtime evidence; diagnose inconsistencies; and validate a supplied eNSP case when requested.
 ---
 
 # eNSP Network Config
 
-Treat configuration delivery as the primary workflow. Keep case learning optional and strictly after configuration work.
+Use the configuration workflow below. Validate a supplied case only when the user explicitly requests it.
+
+This skill produces planning artifacts, staged VRP scripts, and evidence-gated
+decisions. It does not connect to, control, or claim runtime success for eNSP
+or network devices; runtime evidence must be supplied by an authorized
+operator or an execution environment.
 
 ## Select the mode
 
@@ -14,7 +19,7 @@ Treat configuration delivery as the primary workflow. Keep case learning optiona
 - For existing configurations, inspect `display current-configuration` before generating changes.
 - For a reported failure, diagnose first; modify configuration only when the user requests a fix.
 
-Read [project-workflow.md](references/project-workflow.md) before starting a configuration project. Use `scripts/project_workflow.py` to persist project state instead of relying on chat history.
+Read [project-workflow.md](references/project-workflow.md) before starting a configuration project. Use `scripts/project_workflow.py` to persist project state instead of relying on transient interaction history.
 
 ## 1. Inspect and normalize inputs
 
@@ -50,17 +55,17 @@ one of its features is `needs_confirmation`; use the generated stage context so
 required, selected, and deliberately omitted features remain visible during
 command generation.
 
-For staged mode, persist complete planning data under `planning/` and show only a concise summary plus uncertainties in chat. Confirm the baseline once before generating the first stage. Treat baseline confirmation as authorization to begin.
+For staged mode, persist complete planning data under `planning/` and return only a concise summary plus uncertainties in the current interaction. Confirm the baseline once before generating the first stage. Treat baseline confirmation as authorization to begin.
 
 When the baseline changes, perform impact analysis and ask whether to rework. Do not silently invalidate prior results. If the user declines rework, either keep the old baseline active or record forced continuation with unresolved risk.
 
-Use [rule-flow.md](references/rule-flow.md) to build the project decision chain. Normalize requirements and topology into tags, hard protocol constraints, scope references, and required outcomes; query `references/rule-index.json` with `scripts/rule_flow.py` before loading rule bodies. Search active validated rules first. Search candidate or reserved rules only when validated coverage is missing, the user explicitly requires that protocol, or the user requests evaluation.
+Use [rule-flow.md](references/rule-flow.md) to build the project decision chain. Normalize requirements and topology into tags, hard protocol constraints, scope references, and required outcomes; query `references/rule-index.json` with `scripts/rule_flow.py` before loading rule bodies.
 
-Treat the Markdown catalogs under `references/design-rules/` as the only reusable rule source. A project rule plan references those rules by stable ID and records project-specific selection, scope, and evidence; it is not a versioned or external rule source. Never define or import an external rule body in a project plan.
+Treat the Markdown catalogs under `references/design-rules/` as the only reusable rule source. A project rule plan references those rules by stable ID and records project-specific selection, scope, and evidence. Keep project values in the plan and do not copy a rule body into it.
 
-Persist the selected scoped instances, capability dependencies, requirement coverage, choice groups, and assertion references in `planning/rule-plan-vN.yaml`. Run `scripts/rule_flow.py validate` before baseline confirmation. Simple mode uses the same interface with a minimal plan. Candidate rules are advisory only and never alter the normal configuration chain.
+Persist the selected scoped instances, capability dependencies, requirement coverage, choice groups, and assertion references in `planning/rule-plan-vN.yaml`. Run `scripts/rule_flow.py validate` before baseline confirmation. Simple mode uses the same interface with a minimal plan.
 
-Use matching validated rules to re-derive device roles, interfaces, VLANs, addresses, VRIDs, priorities, costs, and verification from the current topology. Never copy concrete case parameters or configurations. Ignore rules whose triggers or boundaries do not match. Resolve conflicts by the precedence in `rule-flow.md`, and record the decision with a reason code.
+Use matching rules to re-derive device roles, interfaces, VLANs, addresses, VRIDs, priorities, costs, and verification from the current topology. Never copy concrete case parameters or configurations. Ignore rules whose triggers or boundaries do not match. Resolve conflicts by the precedence in `rule-flow.md`, and record the decision with a reason code.
 
 ## 3. Build the stage dependency plan
 
@@ -70,7 +75,7 @@ Before working on a stage, run `scripts/rule_flow.py context` for that stage. Lo
 
 ## 4. Generate one TXT per stage
 
-Read only the matching sections of [vrp-patterns.md](references/vrp-patterns.md) and follow the Stage TXT contract and static delivery gate in [project-workflow.md](references/project-workflow.md). Generate complete Huawei VRP command forms from the confirmed baseline; do not make an unproven template renderer a dependency. Write full scripts to versioned files and show only summaries and links in chat.
+Read only the matching sections of [vrp-patterns.md](references/vrp-patterns.md) and follow the Stage TXT contract and static delivery gate in [project-workflow.md](references/project-workflow.md). Generate complete Huawei VRP command forms from the confirmed baseline; do not make an unproven template renderer a dependency. Write full scripts to versioned files and return only summaries and links in the current interaction.
 
 Before emitting a protocol feature, trace it to a confirmed requirement or a
 mandatory dependency of the selected design. Remove convenience, hardening,
@@ -93,16 +98,10 @@ Follow Failure, reset, and change handling in [project-workflow.md](references/p
 
 ## 7. Complete and assemble
 
-Follow Completion and case learning in [project-workflow.md](references/project-workflow.md). Generate `98-全网验收.txt` from confirmed requirements. Use `scripts/assemble_stage_scripts.py` only at project completion or on user request to build `99-全网最终完整配置.txt`; never semantically deduplicate commands. Never claim operational success from static reasoning alone.
+Follow Completion in [project-workflow.md](references/project-workflow.md). Generate `98-全网验收.txt` from confirmed requirements. Use `scripts/assemble_stage_scripts.py` only at project completion or on user request to build `99-全网最终完整配置.txt`; never semantically deduplicate commands. Never claim operational success from static reasoning alone.
 
-## 8. Import a case only when authorized
+## 8. Validate a supplied case on request
 
-After configuration and acceptance are complete, ask once whether to save the project as a case. Do not import, update the capability matrix, or delay script delivery without explicit authorization.
+When the user provides a case for validation, keep it separate from the current configuration project and do not delay script delivery.
 
-For an authorized import, normalize the case to `case.json`, `topology.json`, `steps.yaml`, and `assertions.yaml`, plus every configuration artifact listed by the case. Run `python scripts/validate_case.py CASE_DIR`; it invokes `scripts/parse_vrp_config.py` for supplied VRP configurations. Require a report with `"valid": true` before marking the case `statically_validated`. If PyYAML is unavailable, report the dependency instead of skipping validation.
-
-For authorized imports, use this quality progression:
-
-`imported -> normalized -> statically_validated -> runtime_validated -> approved`
-
-Only approved cases may serve as trusted evidence. Skip cases that add no new capability.
+Normalize the case to `case.json`, `topology.json`, `steps.yaml`, and `assertions.yaml`, plus every configuration artifact listed by the case. Run `python scripts/validate_case.py CASE_DIR`; it invokes `scripts/parse_vrp_config.py` for supplied VRP configurations. Require a report with `"valid": true` before using the case as project evidence. If PyYAML is unavailable, report the dependency instead of skipping validation.
