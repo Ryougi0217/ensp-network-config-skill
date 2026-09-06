@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_SCHEMA_VERSION = "1.0.0"
 STAGE_STATES = {
     "planned",
     "script_generated",
@@ -101,7 +100,6 @@ def yaml_scalar(value: Any) -> str:
 
 def render_stage_plan(project_dir: Path, data: dict[str, Any]) -> None:
     lines = [
-        f"schema_version: {yaml_scalar(PROJECT_SCHEMA_VERSION)}",
         f"project_id: {yaml_scalar(data['project_id'])}",
         f"mode: {yaml_scalar(data['mode'])}",
         f"baseline_version: {yaml_scalar(data['baseline']['version'])}",
@@ -135,7 +133,6 @@ def create_project(path: Path, name: str, mode: str) -> Path:
     skeleton = SIMPLE_SKELETON if mode == "simple" else STAGED_SKELETON
     created_at = now()
     data: dict[str, Any] = {
-        "schema_version": PROJECT_SCHEMA_VERSION,
         "project_id": project_id,
         "name": name,
         "mode": mode,
@@ -164,7 +161,7 @@ def create_project(path: Path, name: str, mode: str) -> Path:
     )
     (project_dir / "topology.json").write_text(
         json.dumps(
-            {"schema_version": "0.1.0", "source": {}, "devices": [], "links": [], "uncertainties": []},
+            {"source": {}, "devices": [], "links": [], "uncertainties": []},
             ensure_ascii=False,
             indent=2,
         )
@@ -172,7 +169,7 @@ def create_project(path: Path, name: str, mode: str) -> Path:
         encoding="utf-8",
     )
     (project_dir / "requirements.yaml").write_text(
-        "schema_version: \"1.0.0\"\nstatus: draft\nrequirements: []\n",
+        "status: draft\nrequirements: []\n",
         encoding="utf-8",
     )
     (project_dir / "planning" / "rule-plan-v0.yaml").write_text(
@@ -185,7 +182,6 @@ def create_project(path: Path, name: str, mode: str) -> Path:
         "instances: []\n",
         encoding="utf-8",
     )
-    (project_dir / "planning" / "rule-selection-log.jsonl").write_text("", encoding="utf-8")
     planning_files = {
         "网络设备与链路规划.txt": "网络设备与链路规划\n状态：待提取与确认\n",
         "VLAN与网关规划.txt": "VLAN与网关规划\n状态：待提取与确认\n",

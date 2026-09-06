@@ -11,7 +11,7 @@
 7. Static delivery gate
 8. Runtime gate
 9. Failure, reset, and change handling
-10. Completion and case learning
+10. Completion
 
 ## 1. Project modes
 
@@ -50,7 +50,6 @@ projects/PROJECT-SLUG/
 ├── stage-plan.yaml
 ├── planning/
 │   ├── rule-plan-v0.yaml
-│   ├── rule-selection-log.jsonl
 │   ├── context/
 │   ├── 网络设备与链路规划.txt
 │   ├── VLAN与网关规划.txt
@@ -61,7 +60,7 @@ projects/PROJECT-SLUG/
 └── evidence/
 ```
 
-Store complete details in files. In chat, show the baseline version, counts, stage summary, conflicts, and uncertainties only.
+Store complete details in files. In the interaction, report only the baseline version, counts, stage summary, conflicts, and uncertainties.
 
 ## 3. Planning baseline
 
@@ -86,29 +85,29 @@ Use these interface rules:
 
 Never generate commands for an unresolved used interface.
 
-Confirm the baseline once. Increment its version after an approved change. Do not repeat full tables in chat.
+Confirm the baseline once. Increment its version after an approved change. Do not repeat full tables in every response.
 
 Before confirmation, create `planning/rule-plan-v0.yaml` using the current
 project-plan structure
 from [rule-flow.md](rule-flow.md), cover every confirmed requirement, link every
 applied instance to its feature profile, and run:
 
-```powershell
-python scripts\rule_flow.py validate projects\PROJECT\planning\rule-plan-v0.yaml
+```sh
+python scripts/rule_flow.py validate projects/PROJECT/planning/rule-plan-v0.yaml
 ```
 
-Baseline confirmation versions the validated rule plan to the same `vN` as the planning baseline. Confirm once; request confirmation again only when a change alters requirements, selected methods, scope, security posture, unsupported work, or downstream rework.
+Baseline confirmation versions the rule plan to the same `vN` as the planning baseline. Confirm once; request confirmation again only when a change alters requirements, selected methods, scope, security posture, unsupported work, or downstream rework.
 
 ## 4. Rule-plan context
 
 Use metadata-first discovery. Query the generated index, then load full rule bodies only for the current stage:
 
-```powershell
-python scripts\rule_flow.py query --tags vlan mstp vrrp
-python scripts\rule_flow.py context projects\PROJECT\planning\rule-plan-v1.yaml --stage 01-access --output projects\PROJECT\planning\context\01-access.md
+```sh
+python scripts/rule_flow.py query --tags vlan mstp vrrp
+python scripts/rule_flow.py context projects/PROJECT/planning/rule-plan-v1.yaml --stage 01-access --output projects/PROJECT/planning/context/01-access.md
 ```
 
-The active rule plan contains applied, advisory, or currently blocked instances only. Write skipped, duplicate, and superseded selection decisions to `planning/rule-selection-log.jsonl`. After a stage passes, keep compact capability and evidence references but drop its rule bodies from active context. Never load source-learning reports or the case corpus during normal project execution.
+The active rule plan contains applied or currently blocked instances. After a stage passes, keep compact capability and evidence references but drop its rule bodies from active context. Load only the catalogs and stage context needed for the current project.
 
 ## 5. Stage skeleton and status
 
@@ -125,7 +124,7 @@ planning baseline
 → end-to-end acceptance
 ```
 
-The normal gate unit is a network layer or independent fault domain. A stage may contain many related commands; do not create a conversational gate for each command family.
+The normal gate unit is a network layer or independent fault domain. A stage may contain many related commands; do not create an interactive gate for each command family.
 
 Default to serial execution. Mark independent branches as parallelizable, but require the user to choose parallel execution. Join branches only after each branch passes its own gate.
 
@@ -280,7 +279,7 @@ When the baseline changes:
 
 If the user rejects rework, either keep the old baseline active or record forced adoption with unresolved risk. Never preserve a normal pass against an incompatible new baseline.
 
-## 10. Completion and case learning
+## 10. Completion
 
 After all stage gates, generate `98-全网验收.txt` from the original confirmed requirements. Include all required positive and negative outcomes and every forced-risk retest.
 
@@ -292,5 +291,3 @@ Use project result states:
 - `implemented`: user says scripts were applied
 - `verified`: every required stage and final acceptance passed normally
 - `completed_with_risks`: execution ended with forced passes or unresolved risks
-
-Ask once after completion whether to save the work as a case. Do not import or update the capability matrix without explicit user authorization.

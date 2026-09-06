@@ -88,10 +88,10 @@ def canonical_command(line: str) -> str:
 
 def contains_abbreviation(line: str) -> bool:
     stripped = line.strip()
-    candidates = [stripped]
+    variants = [stripped]
     if stripped.casefold().startswith("undo "):
-        candidates.append(stripped[5:].lstrip())
-    return any(ABBREVIATION_RE.match(candidate) for candidate in candidates)
+        variants.append(stripped[5:].lstrip())
+    return any(ABBREVIATION_RE.match(variant) for variant in variants)
 
 
 def placeholder_kinds(line: str) -> list[str]:

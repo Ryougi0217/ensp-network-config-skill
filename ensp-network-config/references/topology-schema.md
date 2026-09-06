@@ -6,7 +6,6 @@ Use one JSON document as the canonical intermediate representation. Keep screens
 
 ```json
 {
-  "schema_version": "0.1.0",
   "case_id": "optional-case-id",
   "source": {"type": "screenshot", "path": "raw/topology.png"},
   "devices": [],
